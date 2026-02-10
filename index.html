@@ -469,7 +469,14 @@
     <script>
         lucide.createIcons();
 
-        // 1. DATA DEFINITIONS
+        // 1. STATE VARIABLES (Defined FIRST to prevent hoisting issues)
+        let currentQuestion = 0;
+        let cart = [];
+        let activeCategory = 'all';
+        let isRolling = false;
+        let isAdminMode = false;
+
+        // 2. DATA DEFINITIONS
         
         const categories = [
             { id: 'all', name: 'ВСЕ МАТЕРИАЛЫ' },
@@ -560,13 +567,6 @@
             { id: 312, name: "Шпион", image: "https://placehold.co/400x400/1a1a1a/e71d36?text=Pin+Spy", desc: "Шпион Истязателя." }
         ];
 
-        let cart = [];
-        let currentQuestion = 0;
-        let activeCategory = 'all';
-        let isRolling = false;
-        let isAdminMode = false;
-
-        // RADIO DATA
         const secretChannels = [
             { freq: 11.0, msg: "МАЙК? МАЙК, ЭТО ТЫ? Я ЗДЕСЬ... ХОЛОДНО...", type: "good" },
             { freq: 66.6, msg: "Я ВИЖУ ТЕБЯ. ЧАСЫ ПРОБИЛИ ЧЕТЫРЕ РАЗА.", type: "evil" }, // Vecna
@@ -623,11 +623,16 @@
 
         async function saveProductToDb(prod, collectionName) {
             if (window.firebaseDb) {
-                const docRef = window.firebaseDoc(window.firebaseDb, collectionName, prod.id.toString());
-                await window.firebaseUpdate(docRef, prod);
-                console.log(`Saved to ${collectionName}`);
+                try {
+                    const docRef = window.firebaseDoc(window.firebaseDb, collectionName, prod.id.toString());
+                    await window.firebaseUpdate(docRef, prod);
+                    alert("✅ УСПЕШНО СОХРАНЕНО В ОБЛАКО!"); // Visual feedback
+                } catch(e) {
+                    alert("❌ ОШИБКА СОХРАНЕНИЯ: " + e.message); // Visual error
+                    console.error(e);
+                }
             } else {
-                console.warn("Saved locally (Demo mode)");
+                alert("⚠️ РЕЖИМ ДЕМО: Сохранено только в памяти телефона. Вставь ключи Firebase!");
             }
         }
 
