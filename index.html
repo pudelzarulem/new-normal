@@ -1,0 +1,976 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stranger Shop - The Upside Down</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Шрифты -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700;900&family=Courier+Prime:ital,wght@0,400;0,700;1,400&family=Rubik+Glitch&display=swap" rel="stylesheet">
+    <!-- Иконки Lucide -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    
+    <style>
+        :root {
+            --stranger-red: #ff0033;
+            --stranger-blue: #0ea5e9;
+            --stranger-cyan: #22d3ee;
+            --stranger-glow: #ff3e3e;
+            --bg-color: #050505;
+        }
+
+        body {
+            background: linear-gradient(to bottom, #020617 0%, #050505 40%, #1a0505 100%);
+            background-attachment: fixed; 
+            color: #e0e0e0;
+            font-family: 'Courier Prime', monospace;
+            overflow-x: hidden;
+            user-select: none;
+        }
+
+        /* --- Типографика --- */
+        .stranger-title {
+            font-family: 'Cinzel Decorative', serif;
+            color: transparent;
+            -webkit-text-stroke: 2px var(--stranger-red);
+            text-stroke: 2px var(--stranger-red);
+            text-shadow: 0 0 15px rgba(255, 0, 51, 0.4);
+            letter-spacing: -1px;
+        }
+
+        .stranger-title.blue {
+            -webkit-text-stroke: 2px var(--stranger-blue);
+            text-stroke: 2px var(--stranger-blue);
+            text-shadow: 0 0 20px rgba(14, 165, 233, 0.6);
+        }
+
+        .iznanka-logo {
+            font-family: 'Rubik Glitch', cursive;
+            color: #fff;
+            --glow-color: var(--stranger-red); 
+            text-shadow: 0 0 5px #fff, 0 0 10px #fff, 0 0 20px var(--glow-color), 0 0 40px var(--glow-color);
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            animation: flicker 4s infinite;
+        }
+
+        .iznanka-logo.blue-theme { --glow-color: var(--stranger-blue); }
+        .iznanka-logo.cyan-theme { --glow-color: var(--stranger-cyan); color: #ecfeff; }
+
+        @keyframes flicker {
+            0%, 18%, 22%, 25%, 53%, 57%, 100% { opacity: 1; text-shadow: 0 0 5px #fff, 0 0 10px #fff, 0 0 20px var(--glow-color); }
+            20%, 24%, 55% { opacity: 0.4; text-shadow: none; }
+        }
+        
+        .neon-border-bottom {
+            border-bottom: 2px solid var(--stranger-blue);
+            box-shadow: 0 4px 20px rgba(14, 165, 233, 0.5);
+        }
+
+        @keyframes fast-blink { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+        .cursor-blink { animation: fast-blink 0.8s infinite; }
+
+        /* --- D20 ANIMATION --- */
+        .d20-wrapper { perspective: 1000px; width: 150px; height: 150px; margin: 0 auto; position: relative; }
+        .d20-die { width: 100%; height: 100%; position: absolute; transform-style: preserve-3d; transition: transform 1s ease-out; }
+        .d20-die.rolling { animation: rollDice 0.5s infinite linear; }
+        @keyframes rollDice { 0% { transform: rotateX(0) rotateY(0) rotateZ(0); } 100% { transform: rotateX(360deg) rotateY(720deg) rotateZ(360deg); } }
+        .d20-svg-container { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; position: relative; }
+        .d20-svg { width: 100%; height: 100%; fill: #ea4c2a; stroke: rgba(255, 255, 255, 0.9); stroke-width: 3; stroke-linejoin: round; filter: drop-shadow(0 0 15px rgba(234, 76, 42, 0.6)); }
+        .d20-svg.blue { fill: var(--stranger-blue); filter: drop-shadow(0 0 15px rgba(14, 165, 233, 0.6)); }
+        .d20-number { position: absolute; font-family: 'Courier Prime', monospace; font-weight: 900; font-size: 3.5rem; color: white; text-shadow: 2px 2px 0px rgba(0,0,0,0.5); z-index: 10; }
+        .d20-die.rolling .d20-number { opacity: 0.3; filter: blur(4px); }
+
+        /* --- Components --- */
+        .retro-card { background: rgba(0, 0, 0, 0.7); border: 1px solid #333; transition: all 0.3s ease; position: relative; overflow: hidden; }
+        .retro-card:hover { border-color: var(--stranger-red); box-shadow: 0 0 15px rgba(255, 0, 51, 0.4); transform: translateY(-2px); }
+        
+        .retro-btn { border: 1px solid var(--stranger-red); color: var(--stranger-red); text-transform: uppercase; letter-spacing: 1px; transition: all 0.2s ease; background: rgba(231, 29, 54, 0.05); cursor: pointer; box-shadow: 0 0 5px rgba(255, 0, 51, 0.2); }
+        .retro-btn:hover { background: var(--stranger-red); color: black; box-shadow: 0 0 20px var(--stranger-red); }
+        
+        .retro-btn.blue { border-color: var(--stranger-blue); color: var(--stranger-blue); background: rgba(14, 165, 233, 0.05); box-shadow: 0 0 5px rgba(14, 165, 233, 0.2); }
+        .retro-btn.blue:hover { background: var(--stranger-blue); color: black; box-shadow: 0 0 20px var(--stranger-blue); }
+
+        .retro-btn.cyan { 
+            border-color: var(--stranger-cyan); 
+            color: var(--stranger-cyan); 
+            background: rgba(34, 211, 238, 0.05); 
+            box-shadow: 0 0 5px rgba(34, 211, 238, 0.2); 
+        }
+        .retro-btn.cyan:hover { 
+            background: var(--stranger-cyan); 
+            color: black; 
+            box-shadow: 0 0 20px var(--stranger-cyan); 
+        }
+
+        .retro-btn:disabled { opacity: 0.5; cursor: not-allowed; filter: grayscale(1); }
+
+        .category-btn { font-family: 'Courier Prime', monospace; text-transform: uppercase; font-size: 0.75rem; padding: 0.5rem 1rem; border: 1px solid #333; color: #888; transition: all 0.3s; white-space: nowrap; background: rgba(0,0,0,0.5); }
+        .category-btn:hover { border-color: var(--stranger-cyan); color: var(--stranger-cyan); box-shadow: 0 0 10px rgba(34, 211, 238, 0.3); }
+        .category-btn.active { background: var(--stranger-cyan); color: black; border-color: var(--stranger-cyan); font-weight: bold; box-shadow: 0 0 15px var(--stranger-cyan); }
+
+        .cart-badge { animation: pulse 2s infinite; }
+        @keyframes pulse { 0% { box-shadow: 0 0 0 0 rgba(231, 29, 54, 0.7); } 70% { box-shadow: 0 0 0 10px rgba(231, 29, 54, 0); } 100% { box-shadow: 0 0 0 0 rgba(231, 29, 54, 0); } }
+
+        /* FX Layers */
+        .film-grain { position: fixed; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 40; opacity: 0.05; background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E"); }
+        .scanlines { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(to bottom, rgba(255,255,255,0), rgba(255,255,255,0) 50%, rgba(0,0,0,0.1) 50%, rgba(0,0,0,0.1)); background-size: 100% 4px; z-index: 41; pointer-events: none; }
+        .vignette { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: radial-gradient(circle, transparent 50%, black 120%); z-index: 39; pointer-events: none; }
+        #upside-down-canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: 0; }
+        .content-layer { position: relative; z-index: 50; }
+        .fade-in { animation: fadeIn 0.8s forwards; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+        .scrollbar-hide::-webkit-scrollbar { display: none; }
+
+        /* RADIO STYLES */
+        .radio-dial-container { position: relative; height: 60px; background: #111; border: 2px solid #333; overflow: hidden; margin: 20px 0; box-shadow: inset 0 0 20px rgba(0,0,0,0.9); }
+        .radio-scale { position: absolute; top: 0; left: 0; height: 100%; width: 100%; display: flex; justify-content: space-between; padding: 0 10px; align-items: center; z-index: 1; pointer-events: none; }
+        .scale-mark { width: 1px; height: 10px; background: #555; }
+        .scale-mark.long { height: 20px; background: #888; }
+        .radio-needle { position: absolute; top: 0; bottom: 0; width: 2px; background: var(--stranger-red); z-index: 10; left: 50%; transform: translateX(-50%); box-shadow: 0 0 5px var(--stranger-red); }
+        .radio-input { position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0; cursor: col-resize; z-index: 20; }
+        .static-noise { position: absolute; inset: 0; background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E"); opacity: 0.3; pointer-events: none; transition: opacity 0.2s; mix-blend-mode: screen; }
+        .signal-light { width: 10px; height: 10px; background: #333; border-radius: 50%; box-shadow: 0 0 2px #000; transition: all 0.2s; }
+        .signal-light.active { background: #0f0; box-shadow: 0 0 10px #0f0; }
+
+        /* VECNA MODE */
+        body.vecna-mode::after {
+            content: ''; position: fixed; inset: 0; background: rgba(255, 0, 0, 0.2); pointer-events: none; z-index: 100; animation: pulseRed 2s infinite; mix-blend-mode: overlay;
+        }
+        @keyframes pulseRed { 0% { opacity: 0.1; } 50% { opacity: 0.4; } 100% { opacity: 0.1; } }
+
+        /* ADMIN INPUTS */
+        .admin-input { background: rgba(0,0,0,0.5); border: 1px solid #333; color: white; padding: 8px; font-family: 'Courier Prime', monospace; width: 100%; outline: none; }
+        .admin-input:focus { border-color: var(--stranger-blue); box-shadow: 0 0 10px rgba(14, 165, 233, 0.3); }
+        .admin-label { color: #888; font-size: 0.7rem; margin-bottom: 4px; display: block; text-transform: uppercase; }
+    </style>
+</head>
+<body class="antialiased h-screen flex flex-col">
+
+    <!-- FX -->
+    <canvas id="upside-down-canvas"></canvas>
+    <div class="film-grain"></div>
+    <div class="scanlines"></div>
+    <div class="vignette"></div>
+
+    <!-- MAIN APP CONTAINER -->
+    <div id="app" class="content-layer w-full h-full flex flex-col overflow-hidden">
+        
+        <!-- HEADER (SHOP) -->
+        <header id="shop-header" class="hidden w-full neon-border-bottom bg-black/90 backdrop-blur-md p-4 flex justify-between items-center shrink-0 z-50">
+            <div class="flex items-center gap-3">
+                <button onclick="goBackToMenu()" class="text-sky-400 hover:text-white transition-colors group p-1" title="Вернуться в меню">
+                    <i data-lucide="arrow-left" class="w-6 h-6 drop-shadow-[0_0_5px_cyan] group-hover:drop-shadow-[0_0_10px_white]"></i>
+                </button>
+                <div class="iznanka-logo blue-theme text-xl md:text-3xl cursor-pointer transition-all" onclick="resetApp()">The Upside Down</div>
+            </div>
+            <button onclick="toggleCart()" class="relative group">
+                <i data-lucide="shopping-cart" class="text-cyan-400 w-6 h-6 drop-shadow-[0_0_8px_rgba(34,211,238,0.8)] group-hover:drop-shadow-[0_0_15px_white] transition-all"></i>
+                <span id="cart-count" class="absolute -top-2 -right-2 bg-red-600 text-black text-[10px] font-bold px-1.5 py-0.5 rounded-full hidden shadow-[0_0_10px_red]">0</span>
+            </button>
+        </header>
+
+        <!-- HEADER (GACHA) -->
+        <header id="gacha-header" class="hidden w-full neon-border-bottom bg-black/90 backdrop-blur-md p-4 flex justify-between items-center shrink-0 z-50 border-b-blue-500">
+             <div class="flex items-center gap-3">
+                <button onclick="goBackToMenu()" class="text-sky-400 hover:text-white transition-colors group p-1" title="Вернуться в меню">
+                    <i data-lucide="arrow-left" class="w-6 h-6 drop-shadow-[0_0_5px_cyan] group-hover:drop-shadow-[0_0_10px_white]"></i>
+                </button>
+                <div class="iznanka-logo blue-theme text-xl md:text-3xl cursor-pointer">БРОСОК СУДЬБЫ</div>
+            </div>
+        </header>
+
+        <!-- HEADER (RADIO) -->
+        <header id="radio-header" class="hidden w-full bg-black/90 backdrop-blur-md p-4 flex justify-between items-center shrink-0 z-50 border-b border-gray-700">
+             <div class="flex items-center gap-3">
+                <button onclick="goBackToMenu()" class="text-gray-400 hover:text-white transition-colors group p-1" title="Вернуться в меню">
+                    <i data-lucide="arrow-left" class="w-6 h-6"></i>
+                </button>
+                <div class="iznanka-logo text-xl md:text-3xl cursor-pointer text-gray-300 !text-shadow-none animate-none">CEREBRO</div>
+            </div>
+            <div class="flex items-center gap-2">
+                <div class="text-[10px] font-mono text-gray-500">SIGNAL</div>
+                <div id="signal-led" class="signal-light"></div>
+            </div>
+        </header>
+
+        <!-- QUIZ VIEW (MENU) -->
+        <main id="quiz-view" class="flex-grow flex flex-col items-center justify-center p-6 text-center">
+            <div class="max-w-xl w-full">
+                <div class="mb-8">
+                    <h1 class="stranger-title blue text-3xl md:text-5xl mb-4 leading-tight uppercase">
+                        Добро пожаловать<br>на ту сторону
+                    </h1>
+                </div>
+
+                <div id="quiz-container" class="bg-black/60 border border-red-900/40 p-8 rounded-sm backdrop-blur-sm fade-in">
+                    <h2 id="question-text" class="text-xl md:text-2xl mb-8 font-bold text-gray-200"></h2>
+                    <div id="answers-container" class="flex flex-col gap-4"></div>
+                </div>
+            </div>
+        </main>
+
+        <!-- CATALOG VIEW -->
+        <main id="catalog-view" class="hidden flex-grow overflow-y-auto p-4 md:p-8">
+            <div class="max-w-6xl mx-auto">
+                <div id="catalog-content" class="pb-20"></div>
+            </div>
+        </main>
+        
+        <!-- GACHA VIEW -->
+        <main id="gacha-view" class="hidden flex-grow overflow-y-auto p-4 md:p-8 flex flex-col items-center">
+             <div class="fade-in flex flex-col items-center justify-center py-4 w-full max-w-4xl">
+                <p class="text-gray-500 text-sm mb-8 max-w-md text-center">32 уникальных артефакта Изнанки. Один бросок определяет твою судьбу.</p>
+                
+                <!-- D20 CONTAINER -->
+                <div class="d20-wrapper mb-8">
+                    <div id="d20-die" class="d20-die">
+                        <div class="d20-svg-container">
+                            <svg viewBox="0 0 100 100" class="d20-svg blue">
+                                <path d="M50 5 L95 25 L95 75 L50 95 L5 75 L5 25 Z" />
+                                <path d="M50 5 L50 50 M95 25 L50 50 M95 75 L50 50 M50 95 L50 50 M5 75 L50 50 M5 25 L50 50" stroke="rgba(255,255,255,0.6)" fill="none"/>
+                            </svg>
+                            <div id="d20-number-display" class="d20-number">20</div>
+                        </div>
+                    </div>
+                </div>
+
+                <button id="roll-btn" onclick="rollD20()" class="retro-btn blue px-8 py-4 text-xl font-bold tracking-widest mb-8">
+                    БРОСОК (200 ₽)
+                </button>
+                
+                <div id="d20-result-area" class="w-full mb-12"></div>
+                
+                <!-- PREVIEW GRID -->
+                <div class="w-full border-t border-gray-800 pt-8 pb-20">
+                    <h3 class="text-center text-gray-500 text-xs mb-6 tracking-[0.2em]">ВОЗМОЖНАЯ ДОБЫЧА (32)</h3>
+                    <div id="gacha-grid" class="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-2 opacity-80">
+                        <!-- Filled by JS -->
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- RADIO VIEW -->
+        <main id="radio-view" class="hidden flex-grow flex flex-col items-center justify-center p-6 relative overflow-hidden">
+            <div class="static-noise" id="radio-static"></div>
+            <div class="relative z-10 w-full max-w-2xl bg-black/80 border border-gray-700 p-8 rounded-lg shadow-2xl backdrop-blur-md">
+                
+                <div class="mb-6 flex justify-between items-end">
+                    <div class="text-xs text-gray-500 font-mono">FM TUNER</div>
+                    <div class="text-4xl font-mono text-red-500 font-bold" style="text-shadow: 0 0 10px red;" id="freq-display">00.0</div>
+                </div>
+
+                <!-- DIAL -->
+                <div class="radio-dial-container">
+                    <div class="radio-scale" id="radio-scale-marks">
+                        <!-- Generated by JS -->
+                    </div>
+                    <div class="radio-needle"></div>
+                    <input type="range" min="0" max="120" step="0.1" value="50" class="radio-input" id="radio-slider" oninput="tuneRadio(this.value)">
+                </div>
+
+                <!-- MESSAGE DISPLAY -->
+                <div class="h-40 bg-black border border-gray-800 p-4 font-mono text-green-500 overflow-hidden relative">
+                    <div class="scanlines opacity-50"></div>
+                    <div id="radio-message" class="text-sm md:text-lg whitespace-pre-wrap leading-relaxed opacity-50 blur-[1px]">
+                        ...ПОИСК СИГНАЛА...
+                    </div>
+                </div>
+
+                <div class="mt-6 flex justify-between items-center text-gray-600 text-xs font-mono">
+                    <div>MODE: AM/FM</div>
+                    <div>HAWKINS LABS</div>
+                </div>
+            </div>
+        </main>
+
+        <!-- ADMIN EDIT MODAL -->
+        <div id="admin-modal" class="fixed inset-0 z-[70] hidden flex items-center justify-center p-4">
+            <div class="absolute inset-0 bg-black/90 backdrop-blur-md" onclick="toggleAdminModal()"></div>
+            <div class="relative w-full max-w-md bg-gray-900 border border-cyan-500/50 shadow-[0_0_30px_rgba(34,211,238,0.2)] p-6 fade-in">
+                <h3 class="text-xl font-bold text-cyan-400 mb-6 font-mono tracking-widest text-center">ИЗМЕНЕНИЕ РЕАЛЬНОСТИ</h3>
+                <input type="hidden" id="edit-id">
+                <div class="space-y-4">
+                    <div>
+                        <label class="admin-label">Название товара</label>
+                        <input type="text" id="edit-name" class="admin-input" placeholder="Например: Вафли Eggo">
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                         <div>
+                            <label class="admin-label">Цена (₽)</label>
+                            <input type="number" id="edit-price" class="admin-input" placeholder="2500">
+                        </div>
+                         <div>
+                            <label class="admin-label">Остаток (шт)</label>
+                            <input type="number" id="edit-stock" class="admin-input" placeholder="10">
+                        </div>
+                    </div>
+                    <div>
+                        <label class="admin-label">Ссылка на фото</label>
+                        <input type="text" id="edit-image" class="admin-input" placeholder="https://...">
+                    </div>
+                    <div>
+                        <label class="admin-label">Описание</label>
+                        <textarea id="edit-desc" rows="3" class="admin-input" placeholder="Описание товара..."></textarea>
+                    </div>
+                </div>
+                <div class="mt-8 flex gap-3">
+                    <button onclick="saveProductChange()" class="flex-1 retro-btn cyan py-3 font-bold">СОХРАНИТЬ</button>
+                    <button onclick="toggleAdminModal()" class="flex-1 retro-btn py-3 font-bold text-gray-500 border-gray-500 hover:text-white">ОТМЕНА</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- CART MODAL -->
+        <div id="cart-modal" class="fixed inset-0 z-[60] hidden">
+            <div class="absolute inset-0 bg-black/80 backdrop-blur-sm" onclick="toggleCart()"></div>
+            <div class="absolute right-0 top-0 h-full w-full max-w-md bg-[#0a0a0a] border-l border-red-900 shadow-[0_0_50px_rgba(231,29,54,0.2)] flex flex-col transform transition-transform duration-300 translate-x-full" id="cart-panel">
+                <div class="p-6 border-b border-red-900/30 flex justify-between items-center">
+                    <h2 class="text-xl text-red-600 font-bold tracking-widest iznanka-logo !text-2xl !animate-none !text-shadow-none" style="text-shadow: 0 0 10px red;">ВАШ НАБОР</h2>
+                    <button onclick="toggleCart()" class="text-gray-500 hover:text-white">✕</button>
+                </div>
+                <div id="cart-items" class="flex-grow overflow-y-auto p-6 space-y-4"></div>
+                <div class="p-6 border-t border-red-900/30 bg-black/50">
+                    <div class="flex justify-between text-lg font-bold mb-6">
+                        <span>ИТОГО:</span>
+                        <span id="cart-total" class="text-red-500 text-shadow-[0_0_10px_red]">0 ₽</span>
+                    </div>
+                    <button onclick="checkout()" class="w-full retro-btn py-4 font-bold text-lg">ОФОРМИТЬ ЗАКАЗ</button>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- FIREBASE SDK -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+        import { getFirestore, collection, getDocs, doc, updateDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+        // 🔥🔥 ВСТАВИТЬ КОНФИГ ТУТ 🔥🔥
+        // 1. Создай проект на console.firebase.google.com
+        // 2. Создай Web App
+        // 3. Скопируй const firebaseConfig = { ... } и вставь ниже ВМЕСТО пустых кавычек
+        
+        const firebaseConfig = {
+    apiKey: "AIzaSyAwASaR4X7QBHOsMcVDupuDXSGnIH5lnTE",
+    authDomain: "stranger-shop.firebaseapp.com",
+    projectId: "stranger-shop",
+    storageBucket: "stranger-shop.firebasestorage.app",
+    messagingSenderId: "227186405685",
+    appId: "1:227186405685:web:911af3b5d69299bf63dc7c",
+    measurementId: "G-BQ7LTEKQHD"
+  };
+
+        let db;
+        let isFirebaseReady = false;
+
+        // Init Firebase safely
+        try {
+            if (firebaseConfig.projectId) {
+                const app = initializeApp(firebaseConfig);
+                db = getFirestore(app);
+                isFirebaseReady = true;
+                console.log("Firebase connected!");
+                
+                // Expose to window for normal JS to use
+                window.firebaseDb = db;
+                window.firebaseUpdate = updateDoc;
+                window.firebaseDoc = doc;
+                window.firebaseSet = setDoc;
+                window.firebaseGetDocs = getDocs;
+                window.firebaseCollection = collection;
+                
+                // Load products from DB immediately
+                window.loadProductsFromDb();
+            } else {
+                console.warn("Firebase config missing. Running in DEMO mode.");
+            }
+        } catch (e) {
+            console.error("Firebase init error:", e);
+        }
+    </script>
+
+    <!-- JS LOGIC -->
+    <script>
+        lucide.createIcons();
+
+        // 1. DATA DEFINITIONS
+        
+        const categories = [
+            { id: 'all', name: 'ВСЕ МАТЕРИАЛЫ' },
+            { id: '3d', name: '3D СТИКЕРЫ' },
+            { id: 'kinder', name: 'ЯЙЦА ДЕМОГОРГОНА' },
+            { id: 'passport', name: 'ДОКУМЕНТЫ' },
+            { id: 'shopper', name: 'ВЕЩМЕШКИ' },
+            { id: 'scent', name: 'ЭФИРЫ' },
+        ];
+
+        // GACHA ITEMS
+        const totemLootTable = [
+            { id: 201, name: "Аудиокассета", image: "https://placehold.co/400x400/1a1a1a/e71d36?text=Mixtape", desc: "Хиты 80-х." },
+            { id: 202, name: "Мини D20", image: "https://placehold.co/400x400/1a1a1a/e71d36?text=D20", desc: "Критический успех." },
+            { id: 203, name: "Бита Стива", image: "https://placehold.co/400x400/1a1a1a/e71d36?text=Bat", desc: "Бита Харрингтона." },
+            { id: 204, name: "Голова Демогоргона", image: "https://placehold.co/400x400/1a1a1a/e71d36?text=Head", desc: "Голова монстра." },
+            { id: 205, name: "Вафля Eggo", image: "https://placehold.co/400x400/1a1a1a/e71d36?text=Waffle", desc: "Завтрак чемпиона." },
+            { id: 206, name: "Кепка Дастина", image: "https://placehold.co/400x400/1a1a1a/e71d36?text=Hat", desc: "Кепка-талисман." },
+            { id: 207, name: "Рация", image: "https://placehold.co/400x400/1a1a1a/e71d36?text=Radio", desc: "Код красный!" },
+            { id: 208, name: "Рогатка", image: "https://placehold.co/400x400/1a1a1a/e71d36?text=Sling", desc: "Оружие Лукаса." },
+            { id: 209, name: "Скейтборд", image: "https://placehold.co/400x400/1a1a1a/e71d36?text=Skate", desc: "Стиль Безумной Макс." },
+            { id: 210, name: "Ключ от Камаро", image: "https://placehold.co/400x400/1a1a1a/e71d36?text=Key", desc: "Ключ Билли." },
+            { id: 211, name: "Якорь Ahoy", image: "https://placehold.co/400x400/1a1a1a/e71d36?text=Anchor", desc: "Scoops Ahoy!" },
+            { id: 212, name: "Жетон Hellfire", image: "https://placehold.co/400x400/1a1a1a/e71d36?text=Token", desc: "Знак клуба." },
+            { id: 213, name: "Истязатель Разума", image: "https://placehold.co/400x400/1a1a1a/e71d36?text=Spider", desc: "Тень над Хоукинсом." },
+            { id: 214, name: "Замок Байерсов", image: "https://placehold.co/400x400/1a1a1a/e71d36?text=Fort", desc: "Убежище Уилла." },
+            { id: 215, name: "Монета Аркады", image: "https://placehold.co/400x400/1a1a1a/e71d36?text=Coin", desc: "Вставь монету." },
+            { id: 216, name: "Ловушка Призрака", image: "https://placehold.co/400x400/1a1a1a/e71d36?text=Trap", desc: "Хэллоуин 84." },
+            { id: 217, name: "Гирлянда", image: "https://placehold.co/400x400/1a1a1a/e71d36?text=Light", desc: "R-U-N." },
+            { id: 218, name: "Колесо Велика", image: "https://placehold.co/400x400/1a1a1a/e71d36?text=Wheel", desc: "Велик Майка." },
+            { id: 219, name: "Звезда Шерифа", image: "https://placehold.co/400x400/1a1a1a/e71d36?text=Star", desc: "Закон и порядок." },
+            { id: 220, name: "VHS Кассета", image: "https://placehold.co/400x400/1a1a1a/e71d36?text=VHS", desc: "Запись с камер." }
+        ];
+
+        const pinLootTable = [
+            { id: 301, name: "Значок Шерифа", image: "https://placehold.co/400x400/1a1a1a/e71d36?text=Pin", desc: "Значок шерифа Хоппера." },
+            { id: 302, name: "Член Клуба", image: "https://placehold.co/400x400/1a1a1a/e71d36?text=Pin+2", desc: "Участник AV клуба." },
+            { id: 303, name: "Друзья Не Врут", image: "https://placehold.co/400x400/1a1a1a/e71d36?text=Pin+011", desc: "Клятва друзей." },
+            { id: 304, name: "Сопящий", image: "https://placehold.co/400x400/1a1a1a/e71d36?text=Pin+MB", desc: "Любимое ругательство Оди." },
+            { id: 305, name: "Офигенно", image: "https://placehold.co/400x400/1a1a1a/e71d36?text=Pin+008", desc: "Стиль сестры Кали." },
+            { id: 306, name: "Тигр Хоукинса", image: "https://placehold.co/400x400/1a1a1a/e71d36?text=Pin+Tiger", desc: "Талисман школы Хоукинс." },
+            { id: 307, name: "Лагерь 'Знать Где'", image: "https://placehold.co/400x400/1a1a1a/e71d36?text=Pin+Camp", desc: "Научный лагерь '85." },
+            { id: 308, name: "Флаг (Секретный)", image: "https://placehold.co/400x400/1a1a1a/e71d36?text=Pin+Ru", desc: "Секретный трофей." },
+            { id: 309, name: "Президент AV Клуба", image: "https://placehold.co/400x400/1a1a1a/e71d36?text=Pin+AV", desc: "Президент радиоклуба." },
+            { id: 310, name: "Мастер Подземелий", image: "https://placehold.co/400x400/1a1a1a/e71d36?text=Pin+DM", desc: "Мастер подземелий." },
+            { id: 311, name: "Зомби-Мальчик", image: "https://placehold.co/400x400/1a1a1a/e71d36?text=Pin+Will", desc: "Прозвище Уилла." },
+            { id: 312, name: "Шпион", image: "https://placehold.co/400x400/1a1a1a/e71d36?text=Pin+Spy", desc: "Шпион Истязателя." }
+        ];
+        
+        const gachaPool = [...totemLootTable, ...pinLootTable];
+
+        const quizData = [
+            { q: "Шум на чердаке. Действия?", a: [{text: "Проверю с фонариком", score:"b"}, {text: "Сделаю музыку громче", score:"s"}, {text: "Позвоню друзьям", score:"sm"}] },
+            { q: "Выбери оружие:", a: [{text: "Бита с гвоздями", score:"b"}, {text: "Рогатка", score:"sm"}, {text: "Сила мысли", score:"p"}] },
+            { q: "Время суток?", a: [{text: "Полдень", score:"n"}, {text: "Сумерки", score:"m"}, {text: "Глубокая ночь", score:"d"}] }
+        ];
+
+        // DEMO PRODUCTS (Used if Firebase is not connected)
+        let products = [
+            { id: 1, name: "Hellfire Club T-Shirt", category: 'tshirt', price: 2500, stock: 12, image: "https://placehold.co/400x400/1a1a1a/e71d36?text=Hellfire", desc: "Официальная униформа клуба.", popular: true },
+            { id: 4, name: "Eggo Waffles Box", category: 'food', price: 1200, stock: 4, image: "https://placehold.co/400x400/1a1a1a/e71d36?text=Eggos", desc: "Лимитированная серия.", popular: true },
+            { id: 5, name: "Walkie-Talkie Pro", category: 'tech', price: 4500, stock: 2, image: "https://placehold.co/400x400/1a1a1a/e71d36?text=Radio", desc: "Ловит частоты Изнанки.", popular: true },
+            { id: 8, name: "Loot Bag 'Starcourt'", category: 'shopper', price: 1200, stock: 9, image: "https://placehold.co/400x400/1a1a1a/e71d36?text=Shopper", desc: "Прочный шоппер из молла.", popular: false },
+            { id: 19, name: "Hellfire Tote", category: 'shopper', price: 1300, stock: 4, image: "https://placehold.co/400x400/1a1a1a/e71d36?text=HF+Bag", desc: "Сумка для D&D.", popular: false },
+            { id: 20, name: "Family Video Bag", category: 'shopper', price: 1100, stock: 12, image: "https://placehold.co/400x400/1a1a1a/e71d36?text=Video+Bag", desc: "Шоппер видеопроката.", popular: false },
+            { id: 21, name: "Palace Arcade", category: 'shopper', price: 1250, stock: 6, image: "https://placehold.co/400x400/1a1a1a/e71d36?text=Arcade", desc: "Сумка для жетонов.", popular: false },
+            { id: 22, name: "Hawkins High Sack", category: 'shopper', price: 1400, stock: 8, image: "https://placehold.co/400x400/1a1a1a/e71d36?text=School+Bag", desc: "Сменка 'Тигров'.", popular: false },
+            { id: 9, name: "Demogorgon Egg", category: 'kinder', price: 2000, stock: 3, image: "https://placehold.co/400x400/1a1a1a/e71d36?text=EGG", desc: "Сюрприз внутри... опасный?", popular: false },
+            { id: 23, name: "Dart's Special", category: 'kinder', price: 2100, stock: 5, image: "https://placehold.co/400x400/1a1a1a/e71d36?text=Nougat+Egg", desc: "Вкус нуги.", popular: false },
+            { id: 24, name: "Mind Flayer Dark", category: 'kinder', price: 2200, stock: 2, image: "https://placehold.co/400x400/1a1a1a/e71d36?text=Dark+Egg", desc: "Темный шоколад.", popular: false },
+            { id: 10, name: "Essence of Void", category: 'scent', price: 1500, stock: 10, image: "https://placehold.co/400x400/1a1a1a/e71d36?text=Scent", desc: "Аромат озона.", popular: false },
+            { id: 30, name: "Waffle Syrup", category: 'scent', price: 1400, stock: 15, image: "https://placehold.co/400x400/1a1a1a/e71d36?text=Syrup", desc: "Запах завтрака.", popular: false },
+            { id: 31, name: "Arcade Popcorn", category: 'scent', price: 1400, stock: 8, image: "https://placehold.co/400x400/1a1a1a/e71d36?text=Popcorn", desc: "Атмосфера Аркады.", popular: false },
+            { id: 32, name: "Upside Down Ash", category: 'scent', price: 1600, stock: 4, image: "https://placehold.co/400x400/1a1a1a/e71d36?text=Ash", desc: "Запах пепла.", popular: false },
+            { id: 33, name: "Steve's Hairspray", category: 'scent', price: 1800, stock: 3, image: "https://placehold.co/400x400/1a1a1a/e71d36?text=Hair", desc: "Секрет укладки.", popular: false },
+            { id: 34, name: "Forest Rain '83", category: 'scent', price: 1500, stock: 12, image: "https://placehold.co/400x400/1a1a1a/e71d36?text=Rain", desc: "Запах леса.", popular: false },
+            { id: 6, name: "D20 Critical", category: '3d', price: 300, stock: 40, image: "https://placehold.co/400x400/1a1a1a/e71d36?text=D20", desc: "Стикер D20.", popular: false },
+            { id: 14, name: "Eleven's Power", category: '3d', price: 350, stock: 35, image: "https://placehold.co/400x400/1a1a1a/e71d36?text=011+Hand", desc: "Рука Оди.", popular: false },
+            { id: 25, name: "Demogorgon Smile", category: '3d', price: 350, stock: 30, image: "https://placehold.co/400x400/1a1a1a/e71d36?text=Demo+Face", desc: "Пасть монстра.", popular: false },
+            { id: 26, name: "Hopper's Star", category: '3d', price: 350, stock: 25, image: "https://placehold.co/400x400/1a1a1a/e71d36?text=Sheriff", desc: "Значок шерифа.", popular: false },
+            { id: 27, name: "Max's Walkman", category: '3d', price: 400, stock: 20, image: "https://placehold.co/400x400/1a1a1a/e71d36?text=Walkman", desc: "Плеер Макс.", popular: false },
+            { id: 28, name: "Scoops Ahoy", category: '3d', price: 300, stock: 45, image: "https://placehold.co/400x400/1a1a1a/e71d36?text=Ahoy+Logo", desc: "Логотип кафе.", popular: false },
+            { id: 29, name: "Friends Don't Lie", category: '3d', price: 350, stock: 38, image: "https://placehold.co/400x400/1a1a1a/e71d36?text=Waffle", desc: "Текстура вафли. Главное правило.", popular: false },
+            { id: 7, name: "Hawkins Lab ID", category: 'passport', price: 900, stock: 10, image: "https://placehold.co/400x400/1a1a1a/e71d36?text=ID+Cover", desc: "Обложка сотрудника.", popular: false },
+            { id: 54, name: "Snow Ball Ticket", category: 'passport', price: 800, stock: 15, image: "https://placehold.co/400x400/1a1a1a/e71d36?text=Ticket", desc: "Билет на бал.", popular: false },
+            { id: 55, name: "Will's Drawing", category: 'passport', price: 700, stock: 8, image: "https://placehold.co/400x400/1a1a1a/e71d36?text=Draw", desc: "Рисунок Тень.", popular: false },
+            { id: 56, name: "Hopper's Letter", category: 'passport', price: 600, stock: 5, image: "https://placehold.co/400x400/1a1a1a/e71d36?text=Letter", desc: "Письмо Оди.", popular: false },
+            { id: 57, name: "Ru Code", category: 'passport', price: 850, stock: 12, image: "https://placehold.co/400x400/1a1a1a/e71d36?text=Code", desc: "Шифр русских.", popular: false },
+            { id: 58, name: "Character Sheet", category: 'passport', price: 500, stock: 20, image: "https://placehold.co/400x400/1a1a1a/e71d36?text=D&D", desc: "Лист Уилла Мудрого.", popular: false },
+            { id: 59, name: "Hawkins Post", category: 'passport', price: 400, stock: 30, image: "https://placehold.co/400x400/1a1a1a/e71d36?text=News", desc: "Газета.", popular: false },
+            { id: 60, name: "Missing Flyer", category: 'passport', price: 300, stock: 40, image: "https://placehold.co/400x400/1a1a1a/e71d36?text=Will", desc: "Пропажа Уилла.", popular: false },
+            { id: 61, name: "Barb Flyer", category: 'passport', price: 300, stock: 35, image: "https://placehold.co/400x400/1a1a1a/e71d36?text=Barb", desc: "Пропажа Барб.", popular: false },
+            { id: 62, name: "Bob's Map", category: 'passport', price: 750, stock: 7, image: "https://placehold.co/400x400/1a1a1a/e71d36?text=Map", desc: "Карта тоннелей.", popular: false },
+            { id: 63, name: "Lab Keycard", category: 'passport', price: 950, stock: 3, image: "https://placehold.co/400x400/1a1a1a/e71d36?text=Key", desc: "Желтый допуск.", popular: false }
+        ];
+
+        let cart = [];
+        let currentQuestion = 0;
+        let activeCategory = 'all';
+        let isRolling = false;
+        let isAdminMode = false;
+
+        // RADIO DATA
+        const secretChannels = [
+            { freq: 11.0, msg: "МАЙК? МАЙК, ЭТО ТЫ? Я ЗДЕСЬ... ХОЛОДНО...", type: "good" },
+            { freq: 66.6, msg: "Я ВИЖУ ТЕБЯ. ЧАСЫ ПРОБИЛИ ЧЕТЫРЕ РАЗА.", type: "evil" }, // Vecna
+            { freq: 85.0, msg: "AHOY! ЭТО SCOOPS AHOY! ПРОБУЙТЕ НАШУ НОВИНКУ U.S.S. BUTTERSCOTCH!", type: "good" },
+            { freq: 42.0, msg: "ДЛИННАЯ. ЖЕЛТАЯ. КОШКА. СМОТРИТ. НА. ЗАПАД.", type: "neutral" }, // Russian Code
+            { freq: 102.5, msg: "ROCK N ROLL NEVER DIES, BABY!", type: "good" }, // Eddie
+        ];
+
+        // --- FIREBASE HELPER FUNCTIONS ---
+        window.loadProductsFromDb = async function() {
+            if (!window.firebaseDb) return;
+            try {
+                const querySnapshot = await window.firebaseGetDocs(window.firebaseCollection(window.firebaseDb, "products"));
+                if (querySnapshot.empty) {
+                    // First time? Upload demo products!
+                    console.log("Database empty. Uploading demo data...");
+                    products.forEach(async (p) => {
+                         await window.firebaseSet(window.firebaseDoc(window.firebaseDb, "products", p.id.toString()), p);
+                    });
+                } else {
+                    products = [];
+                    querySnapshot.forEach((doc) => {
+                        products.push({ id: doc.id, ...doc.data() });
+                    });
+                    console.log("Loaded products from Firebase:", products.length);
+                    // If shop is open, refresh
+                    if (!document.getElementById('catalog-view').classList.contains('hidden')) {
+                        renderProducts();
+                    }
+                }
+            } catch (e) {
+                console.error("Error loading products:", e);
+            }
+        }
+
+        async function saveProductToDb(prod) {
+            if (window.firebaseDb) {
+                const docRef = window.firebaseDoc(window.firebaseDb, "products", prod.id.toString());
+                await window.firebaseUpdate(docRef, prod);
+                console.log("Product updated in Cloud");
+            } else {
+                console.warn("Saved locally (Demo mode)");
+            }
+        }
+
+        // --- UI FUNCTIONS ---
+
+        function renderQuiz() {
+            const qContainer = document.getElementById('quiz-container');
+            const qText = document.getElementById('question-text');
+            const aContainer = document.getElementById('answers-container');
+            qContainer.classList.remove('fade-in'); void qContainer.offsetWidth; qContainer.classList.add('fade-in');
+            if (currentQuestion >= quizData.length) { finishQuiz(); return; }
+            const data = quizData[currentQuestion];
+            qText.innerText = `ВОПРОС 0${currentQuestion + 1}: ${data.q}`;
+            aContainer.innerHTML = '';
+            data.a.forEach(answer => {
+                const btn = document.createElement('button');
+                btn.className = 'retro-btn p-4 text-left w-full hover:pl-6 transition-all duration-300 font-bold text-sm md:text-base';
+                btn.innerText = `> ${answer.text}`;
+                btn.onclick = () => { currentQuestion++; renderQuiz(); };
+                aContainer.appendChild(btn);
+            });
+        }
+
+        function finishQuiz() {
+            const quizView = document.getElementById('quiz-view');
+            quizView.innerHTML = `
+                <div class="text-center fade-in flex flex-col items-center w-full max-w-md">
+                    <h1 class="text-3xl md:text-4xl text-cyan-400 font-bold mb-8 font-mono tracking-widest uppercase" style="text-shadow: 0 0 10px rgba(34, 211, 238, 0.6);">СИСТЕМА НАВИГАЦИИ<span class="cursor-blink">_</span></h1>
+                    <div class="flex flex-col gap-4 w-full">
+                        <button onclick="enterShop()" class="retro-btn px-8 py-4 text-xl font-bold tracking-widest w-full hover:bg-red-900/20">МАГАЗИН</button>
+                        <button onclick="enterGacha()" class="retro-btn cyan px-8 py-4 text-xl font-bold tracking-widest w-full shadow-[0_0_10px_rgba(34,211,238,0.3)]">БРОСОК СУДЬБЫ</button>
+                        <button onclick="alert('Тест скоро будет доступен. Лаборатория закрыта.')" class="retro-btn px-8 py-4 text-xl font-bold tracking-widest w-full hover:bg-red-900/20 opacity-70">НАЧАТЬ ЭКСПЕРИМЕНТ</button>
+                        <button onclick="enterRadio()" class="retro-btn px-8 py-4 text-xl font-bold tracking-widest w-full hover:bg-red-900/20">РАДИОЭФИР</button>
+                    </div>
+                </div>
+            `;
+        }
+
+        function hideAllViews() {
+            document.getElementById('quiz-view').classList.add('hidden');
+            document.getElementById('catalog-view').classList.add('hidden');
+            document.getElementById('shop-header').classList.add('hidden');
+            document.getElementById('gacha-view').classList.add('hidden');
+            document.getElementById('gacha-header').classList.add('hidden');
+            document.getElementById('radio-view').classList.add('hidden');
+            document.getElementById('radio-header').classList.add('hidden');
+            document.body.classList.remove('vecna-mode');
+        }
+
+        function enterShop() {
+            hideAllViews();
+            document.getElementById('shop-header').classList.remove('hidden');
+            document.getElementById('catalog-view').classList.remove('hidden');
+            document.getElementById('catalog-view').classList.add('fade-in');
+            renderProducts();
+        }
+        
+        function enterGacha() {
+            hideAllViews();
+            document.getElementById('gacha-header').classList.remove('hidden');
+            document.getElementById('gacha-view').classList.remove('hidden');
+            document.getElementById('gacha-view').classList.add('fade-in');
+            renderGacha();
+        }
+
+        function enterRadio() {
+            hideAllViews();
+            document.getElementById('radio-header').classList.remove('hidden');
+            document.getElementById('radio-view').classList.remove('hidden');
+            document.getElementById('radio-view').classList.add('fade-in');
+            renderRadioScale();
+            // Start radio logic
+            tuneRadio(document.getElementById('radio-slider').value);
+        }
+
+        function goBackToMenu() {
+            hideAllViews();
+            const quizView = document.getElementById('quiz-view');
+            quizView.classList.remove('hidden');
+            const menuContent = quizView.querySelector('div');
+            if (menuContent) { menuContent.classList.remove('fade-in'); void menuContent.offsetWidth; menuContent.classList.add('fade-in'); }
+        }
+
+        // --- RADIO LOGIC ---
+        function renderRadioScale() {
+            const container = document.getElementById('radio-scale-marks');
+            container.innerHTML = '';
+            for(let i=0; i<=50; i++) {
+                const mark = document.createElement('div');
+                mark.className = `scale-mark ${i % 5 === 0 ? 'long' : ''}`;
+                container.appendChild(mark);
+            }
+        }
+
+        function tuneRadio(val) {
+            const freq = parseFloat(val);
+            document.getElementById('freq-display').innerText = freq.toFixed(1);
+            
+            // Check proximity to secrets
+            let message = "...ПОИСК СИГНАЛА...";
+            let signalStrength = 0;
+            let currentType = 'neutral';
+            
+            // Proximity range
+            const range = 1.5; 
+
+            secretChannels.forEach(ch => {
+                const diff = Math.abs(ch.freq - freq);
+                if (diff < range) {
+                    const clarity = 1 - (diff / range); // 0 to 1
+                    signalStrength = Math.max(signalStrength, clarity);
+                    
+                    if (clarity > 0.8) {
+                        message = ch.msg;
+                        currentType = ch.type;
+                    } else if (clarity > 0.4) {
+                        message = scrambleText(ch.msg, 0.5); // 50% scrambled
+                    } else {
+                        message = scrambleText(ch.msg, 0.9); // Mostly static
+                    }
+                }
+            });
+
+            // Update UI
+            const msgEl = document.getElementById('radio-message');
+            const staticEl = document.getElementById('radio-static');
+            const led = document.getElementById('signal-led');
+
+            msgEl.innerText = message;
+            
+            // Signal visuals
+            if (signalStrength > 0.1) {
+                msgEl.style.opacity = 0.5 + (signalStrength * 0.5);
+                msgEl.style.filter = `blur(${(1-signalStrength)*2}px)`;
+                staticEl.style.opacity = 0.3 - (signalStrength * 0.2); // Less static when signal is strong
+                
+                // Color change for evil channels
+                if (currentType === 'evil' && signalStrength > 0.8) {
+                    document.body.classList.add('vecna-mode');
+                    msgEl.style.color = '#ff0000';
+                    msgEl.style.textShadow = '0 0 5px red';
+                } else {
+                    document.body.classList.remove('vecna-mode');
+                    msgEl.style.color = '#22d3ee'; // Cyan default
+                    msgEl.style.textShadow = '0 0 5px cyan';
+                }
+            } else {
+                msgEl.style.opacity = 0.3;
+                msgEl.style.filter = 'blur(3px)';
+                staticEl.style.opacity = 0.4;
+                document.body.classList.remove('vecna-mode');
+                msgEl.style.color = '#4ade80'; // Green idle
+                msgEl.style.textShadow = 'none';
+            }
+
+            // LED
+            if (signalStrength > 0.7) led.classList.add('active');
+            else led.classList.remove('active');
+        }
+
+        function scrambleText(text, factor) {
+            return text.split('').map(char => {
+                if (char === ' ') return ' ';
+                return Math.random() < factor ? String.fromCharCode(33 + Math.floor(Math.random() * 90)) : char;
+            }).join('');
+        }
+
+        // --- SHOP & ADMIN LOGIC ---
+        function setCategory(id) { activeCategory = id; renderProducts(); }
+        
+        function toggleAdminMode() {
+            if (isAdminMode) {
+                isAdminMode = false;
+                renderProducts();
+            } else {
+                const pass = prompt("КОД ДОСТУПА:", "");
+                if (pass === "1111") {
+                    isAdminMode = true;
+                    renderProducts();
+                    alert("ДОСТУП РАЗРЕШЕН");
+                } else if(pass) {
+                    alert("ОШИБКА ДОСТУПА");
+                }
+            }
+        }
+
+        function openEditModal(id) {
+            const p = products.find(prod => prod.id == id);
+            if (!p) return;
+            
+            document.getElementById('edit-id').value = p.id;
+            document.getElementById('edit-name').value = p.name;
+            document.getElementById('edit-price').value = p.price;
+            document.getElementById('edit-stock').value = p.stock;
+            document.getElementById('edit-image').value = p.image;
+            document.getElementById('edit-desc').value = p.desc;
+            
+            document.getElementById('admin-modal').classList.remove('hidden');
+        }
+
+        function toggleAdminModal() {
+            document.getElementById('admin-modal').classList.add('hidden');
+        }
+
+        async function saveProductChange() {
+            const id = document.getElementById('edit-id').value;
+            const name = document.getElementById('edit-name').value;
+            const price = parseInt(document.getElementById('edit-price').value);
+            const stock = parseInt(document.getElementById('edit-stock').value);
+            const image = document.getElementById('edit-image').value;
+            const desc = document.getElementById('edit-desc').value;
+
+            const pIndex = products.findIndex(p => p.id == id);
+            if (pIndex !== -1) {
+                // Optimistic Update
+                products[pIndex] = { ...products[pIndex], name, price, stock, image, desc };
+                
+                // Save to Cloud
+                const btn = document.querySelector('#admin-modal button.cyan');
+                const prevText = btn.innerText;
+                btn.innerText = "СОХРАНЕНИЕ...";
+                await saveProductToDb(products[pIndex]);
+                btn.innerText = prevText;
+                
+                toggleAdminModal();
+                renderProducts();
+            }
+        }
+
+        function getProductCardHTML(product, isLarge = false) {
+             const stockClass = product.stock < 5 ? 'text-red-500 animate-pulse' : 'text-gray-500';
+             
+             // Admin Edit Button
+             const editBtn = isAdminMode ? `
+                <button onclick="event.stopPropagation(); openEditModal(${product.id})" class="absolute top-2 left-2 bg-cyan-500 text-black p-1 z-30 shadow-[0_0_10px_cyan] hover:scale-110 transition-transform">
+                    <i data-lucide="pencil" class="w-4 h-4"></i>
+                </button>
+             ` : '';
+
+             return `
+                <div class="retro-card flex flex-col h-full group ${isLarge ? 'border-red-900/60' : ''} fade-in">
+                    <div class="relative overflow-hidden ${isLarge ? 'h-48 md:h-72' : 'h-36 md:h-56'} bg-gray-900 border-b border-gray-800">
+                        ${editBtn}
+                        <img src="${product.image}" alt="${product.name}" class="w-full h-full object-cover opacity-80 group-hover:opacity-100 group-hover:scale-110 transition-transform duration-500">
+                        ${isLarge ? '<div class="absolute top-2 right-2 bg-red-600 text-black text-[10px] md:text-xs font-bold px-1.5 py-0.5 md:px-2 md:py-1 shadow-lg shadow-red-500/50">HIT</div>' : ''}
+                    </div>
+                    <div class="p-3 md:p-4 flex flex-col flex-grow">
+                        <h3 class="text-sm md:text-lg font-bold text-white mb-1 md:mb-2 leading-tight line-clamp-2">${product.name}</h3>
+                        <p class="text-gray-500 text-[10px] md:text-xs mb-2 md:mb-4 flex-grow line-clamp-2">${product.desc}</p>
+                        <div class="flex justify-between items-end mt-auto">
+                            <span class="text-red-500 font-bold text-sm md:text-base text-shadow-[0_0_5px_red]">${product.price} ₽</span>
+                            <div class="flex flex-col items-end gap-1">
+                                <span class="text-[8px] md:text-[10px] ${stockClass} font-mono tracking-wider">ОСТ: ${product.stock}</span>
+                                <button onclick="addToCart(${product.id})" class="retro-btn px-2 py-1 md:px-3 text-[10px] md:text-xs font-bold flex items-center gap-1 md:gap-2"><span>+</span> <span class="hidden sm:inline">В КОРЗИНУ</span><span class="sm:hidden">ВЗЯТЬ</span></button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        function rollD20() {
+            if (isRolling) return;
+            isRolling = true;
+            const dieElement = document.getElementById('d20-die');
+            const resultArea = document.getElementById('d20-result-area');
+            const btn = document.getElementById('roll-btn');
+            const numberDisplay = document.getElementById('d20-number-display');
+            
+            btn.disabled = true;
+            btn.innerText = "ВРАЩЕНИЕ...";
+            resultArea.innerHTML = ''; 
+            dieElement.classList.add('rolling');
+            
+            let shuffleInterval = setInterval(() => { numberDisplay.innerText = Math.floor(Math.random() * 20) + 1; }, 100);
+
+            setTimeout(() => {
+                clearInterval(shuffleInterval);
+                dieElement.classList.remove('rolling');
+                const rollResult = Math.floor(Math.random() * 20) + 1;
+                numberDisplay.innerText = rollResult;
+                
+                // PICK RANDOM ITEM
+                const randomIndex = Math.floor(Math.random() * gachaPool.length);
+                const wonItem = gachaPool[randomIndex];
+                
+                resultArea.innerHTML = `
+                    <div class="fade-in mt-6 w-full max-w-sm mx-auto">
+                        <div class="text-green-500 font-bold mb-2 text-xl font-mono">СУДЬБА ВЫБРАЛА:</div>
+                        <div class="retro-card border-red-500 shadow-[0_0_20px_red]">
+                            <div class="h-48 bg-gray-900 border-b border-red-900/50">
+                                <img src="${wonItem.image}" class="w-full h-full object-cover">
+                            </div>
+                            <div class="p-4">
+                                <h3 class="text-xl font-bold text-white mb-1">${wonItem.name}</h3>
+                                <p class="text-gray-400 text-xs mb-3">${wonItem.desc}</p>
+                                <div class="w-full bg-cyan-900/20 border border-cyan-500/50 p-2 text-center text-cyan-400 font-bold text-sm tracking-widest">
+                                    ПОЛУЧЕНО
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                isRolling = false;
+                btn.disabled = false;
+                btn.innerText = `БРОСОК (200 ₽)`;
+            }, 2500);
+        }
+        
+        function renderGacha() {
+            const grid = document.getElementById('gacha-grid');
+            grid.innerHTML = gachaPool.map((item, idx) => `
+                <div class="group relative aspect-square bg-gray-900 border border-gray-800 hover:border-red-500/50 transition-colors cursor-help rounded-sm overflow-hidden" title="${item.name}">
+                    <img src="${item.image}" class="w-full h-full object-cover opacity-60 group-hover:opacity-100 transition-opacity">
+                    <div class="absolute bottom-0 right-0 bg-black/80 text-[8px] px-1 text-gray-400 font-mono">${idx + 1}</div>
+                </div>
+            `).join('');
+            
+            updateCartUI();
+        }
+
+        function renderProducts() {
+            const container = document.getElementById('catalog-content');
+            let html = `
+                <div class="fade-in mb-8">
+                      <div class="flex flex-col gap-6 mb-8">
+                        <div class="flex items-center gap-4">
+                            <h2 class="text-2xl md:text-3xl font-normal tracking-widest iznanka-logo cyan-theme !animate-none !text-2xl" style="text-shadow: 0 0 10px var(--stranger-cyan);">СКЛАД</h2>
+                            <div class="h-[1px] bg-cyan-900/50 flex-grow shadow-[0_0_5px_cyan]"></div>
+                            <div class="text-xs text-gray-500 font-mono">STORAGE</div>
+                        </div>
+                        <div class="flex gap-2 overflow-x-auto pb-2 scrollbar-hide">
+                            ${categories.map(cat => `
+                                <button onclick="setCategory('${cat.id}')" class="category-btn ${activeCategory === cat.id ? 'active' : ''}">${cat.name}</button>
+                            `).join('')}
+                        </div>
+                        
+                        <!-- ADMIN TOGGLE -->
+                        <div class="flex justify-end">
+                            <button onclick="toggleAdminMode()" class="text-[10px] font-mono tracking-widest border border-gray-800 px-2 py-1 hover:border-cyan-500 hover:text-cyan-500 transition-colors ${isAdminMode ? 'text-cyan-500 border-cyan-500' : 'text-gray-600'}">
+                                ${isAdminMode ? 'РЕЖИМ БОГА: ВКЛ' : 'УПРАВЛЕНИЕ'}
+                            </button>
+                        </div>
+
+                    </div>
+                </div>
+            `;
+
+            let itemsToDisplay = products;
+            if (activeCategory !== 'all') { itemsToDisplay = products.filter(p => p.category === activeCategory); }
+
+            if (itemsToDisplay.length > 0) {
+                html += `<div class="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-6 fade-in">${itemsToDisplay.map(p => getProductCardHTML(p, p.popular)).join('')}</div>`;
+            } else {
+                html += `<div class="text-center py-10 text-gray-500 font-mono fade-in">ПУСТОТА...</div>`;
+            }
+            container.innerHTML = html;
+            lucide.createIcons();
+        }
+
+        function addToCart(id) {
+            const product = products.find(p => p.id === id);
+            cart.push(product); updateCartUI();
+            const btn = event.currentTarget;
+            btn.innerHTML = "ДОБАВЛЕНО!"; btn.classList.add("bg-red-900", "text-white");
+            setTimeout(() => { btn.innerHTML = `<span>+</span> <span class="hidden sm:inline">В КОРЗИНУ</span><span class="sm:hidden">ВЗЯТЬ</span>`; btn.classList.remove("bg-red-900", "text-white"); }, 1000);
+        }
+
+        function removeFromCart(index) { cart.splice(index, 1); updateCartUI(); }
+
+        function updateCartUI() {
+            const countBadge = document.getElementById('cart-count');
+            const cartItemsContainer = document.getElementById('cart-items');
+            const totalEl = document.getElementById('cart-total');
+
+            const count = cart.length;
+            
+            if (count > 0) { 
+                countBadge.innerText = count; 
+                countBadge.classList.remove('hidden'); 
+                countBadge.classList.add('cart-badge'); 
+            } else { 
+                countBadge.classList.add('hidden'); 
+                countBadge.classList.remove('cart-badge'); 
+            }
+
+            if (cart.length === 0) { cartItemsContainer.innerHTML = '<div class="text-center text-gray-600 mt-10">Пусто...</div>'; } 
+            else {
+                cartItemsContainer.innerHTML = cart.map((item, index) => `
+                    <div class="flex items-center justify-between bg-white/5 p-3 border border-gray-800">
+                        <div class="flex items-center gap-3">
+                            <img src="${item.image}" class="w-10 h-10 object-cover border border-gray-700">
+                            <div><div class="text-sm font-bold text-gray-300">${item.name}</div><div class="text-xs text-red-500">${item.price} ₽</div></div>
+                        </div>
+                        <button onclick="removeFromCart(${index})" class="text-gray-500 hover:text-red-500">✕</button>
+                    </div>
+                `).join('');
+            }
+            const total = cart.reduce((sum, item) => sum + item.price, 0);
+            totalEl.innerText = `${total} ₽`;
+        }
+
+        function toggleCart() {
+            const modal = document.getElementById('cart-modal');
+            const panel = document.getElementById('cart-panel');
+            if (modal.classList.contains('hidden')) { modal.classList.remove('hidden'); setTimeout(() => panel.classList.remove('translate-x-full'), 10); } 
+            else { panel.classList.add('translate-x-full'); setTimeout(() => modal.classList.add('hidden'), 300); }
+        }
+
+        function checkout() {
+            if (cart.length === 0) return;
+            alert(`Заказ отправлен!\nСумма: ${document.getElementById('cart-total').innerText}\nТовары: ${cart.map(i => i.name).join(', ')}`);
+            cart = []; updateCartUI(); toggleCart();
+        }
+
+        function resetApp() { location.reload(); }
+
+        window.onload = () => { renderQuiz(); initParticles(); animate(); };
+
+        const canvas = document.getElementById('upside-down-canvas');
+        const ctx = canvas.getContext('2d');
+        let width, height, particles = [];
+        function initParticles() { width = canvas.width = window.innerWidth; height = canvas.height = window.innerHeight; particles = []; const count = window.innerWidth < 768 ? 40 : 80; for(let i=0; i<count; i++) particles.push(new Particle()); }
+        class Particle { constructor() { this.reset(); } reset() { this.x = Math.random() * width; this.y = Math.random() * height; this.vx = (Math.random() - 0.5) * 0.5; this.vy = (Math.random() - 0.5) * 0.5; this.size = Math.random() * 2 + 0.5; this.alpha = Math.random() * 0.5 + 0.1; this.life = Math.random() * 100; } update() { this.x += this.vx; this.y += this.vy; this.life--; if(this.life <= 0 || this.alpha <= 0 || this.x<0 || this.x>width) this.reset(); } draw() { ctx.beginPath(); ctx.arc(this.x, this.y, this.size, 0, Math.PI*2); ctx.fillStyle = `rgba(180, 180, 200, ${this.alpha})`; ctx.fill(); } }
+        function animate() { ctx.clearRect(0, 0, width, height); particles.forEach(p => { p.update(); p.draw(); }); requestAnimationFrame(animate); }
+        window.addEventListener('resize', initParticles);
+    </script>
+</body>
+</html>
