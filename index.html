@@ -13,6 +13,9 @@
     <!-- Иконки Lucide -->
     <script src="https://unpkg.com/lucide@latest"></script>
     
+    <!-- 🔥 ПОДКЛЮЧАЕМ ТВОЙ СЕЙФ С КЛЮЧАМИ -->
+    <script src="keys.js"></script>
+
     <style>
         :root {
             --stranger-red: #ff0033;
@@ -136,17 +139,6 @@
         .fade-in { animation: fadeIn 0.8s forwards; }
         @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
         .scrollbar-hide::-webkit-scrollbar { display: none; }
-
-        /* RADIO STYLES */
-        .radio-dial-container { position: relative; height: 60px; background: #111; border: 2px solid #333; overflow: hidden; margin: 20px 0; box-shadow: inset 0 0 20px rgba(0,0,0,0.9); }
-        .radio-scale { position: absolute; top: 0; left: 0; height: 100%; width: 100%; display: flex; justify-content: space-between; padding: 0 10px; align-items: center; z-index: 1; pointer-events: none; }
-        .scale-mark { width: 1px; height: 10px; background: #555; }
-        .scale-mark.long { height: 20px; background: #888; }
-        .radio-needle { position: absolute; top: 0; bottom: 0; width: 2px; background: var(--stranger-red); z-index: 10; left: 50%; transform: translateX(-50%); box-shadow: 0 0 5px var(--stranger-red); }
-        .radio-input { position: absolute; top: 0; left: 0; width: 100%; height: 100%; opacity: 0; cursor: col-resize; z-index: 20; }
-        .static-noise { position: absolute; inset: 0; background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E"); opacity: 0.3; pointer-events: none; transition: opacity 0.2s; mix-blend-mode: screen; }
-        .signal-light { width: 10px; height: 10px; background: #333; border-radius: 50%; box-shadow: 0 0 2px #000; transition: all 0.2s; }
-        .signal-light.active { background: #0f0; box-shadow: 0 0 10px #0f0; }
 
         /* VECNA MODE */
         body.vecna-mode::after {
@@ -417,9 +409,17 @@
 
         <!-- DELIVERY MODAL (ОФОРМЛЕНИЕ ДОСТАВКИ) -->
         <div id="delivery-modal" class="fixed inset-0 z-[65] hidden flex items-center justify-center p-4">
-            <div class="absolute inset-0 bg-black/90 backdrop-blur-md" onclick="toggleDelivery()"></div>
+            <div class="absolute inset-0 bg-black/90 backdrop-blur-md" onclick="backToCart()"></div>
             <div class="relative w-full max-w-md bg-[#0a0a0a] border border-cyan-500/30 shadow-[0_0_30px_rgba(34,211,238,0.1)] p-6 fade-in overflow-y-auto max-h-[90vh]">
-                <h3 class="text-xl font-bold text-cyan-400 font-mono tracking-widest mb-6 text-center">ОФОРМЛЕНИЕ ДОСТАВКИ</h3>
+                
+                <!-- HEADER С КНОПКОЙ НАЗАД -->
+                <div class="relative mb-6 text-center">
+                    <button onclick="backToCart()" class="absolute left-0 top-1 text-gray-500 hover:text-white transition-colors">
+                        <i data-lucide="arrow-left" class="w-6 h-6"></i>
+                    </button>
+                    <h3 class="text-xl font-bold text-cyan-400 font-mono tracking-widest">ДОСТАВКА</h3>
+                </div>
+
                 <div class="space-y-4">
                     <div>
                         <label class="admin-label">Ваше Имя</label>
@@ -428,6 +428,10 @@
                     <div>
                         <label class="admin-label">Телефон</label>
                         <input type="tel" id="del-phone" class="admin-input" placeholder="+7 999 000-00-00">
+                    </div>
+                    <div>
+                        <label class="admin-label">Время доставки</label>
+                        <input type="text" id="del-time" class="admin-input" placeholder="Например: Сегодня к 19:00">
                     </div>
                     <div>
                         <label class="admin-label">Город</label>
@@ -471,7 +475,11 @@
                         <span>ИТОГО:</span>
                         <span id="cart-total" class="text-red-500 text-shadow-[0_0_10px_red]">0 ₽</span>
                     </div>
-                    <button onclick="openDelivery()" class="w-full retro-btn py-4 font-bold text-lg">ОФОРМИТЬ ДОСТАВКУ</button>
+                    <!-- ДВЕ КНОПКИ ДЕЙСТВИЯ -->
+                    <div class="grid grid-cols-2 gap-3">
+                        <button onclick="checkoutInstant()" class="retro-btn py-4 font-bold text-xs md:text-sm">ЗАБРАТЬ СЕЙЧАС</button>
+                        <button onclick="openDelivery()" class="retro-btn cyan py-4 font-bold text-xs md:text-sm">ЗАКАЗАТЬ НА ДОМ</button>
+                    </div>
                 </div>
             </div>
         </div>
@@ -481,7 +489,12 @@
     <!-- ВСТАВЛЯЕМ СКРИПТ ЗАГРУЗКИ (МОЖНО ПРЯМО ПЕРЕД <script type="module">) -->
     <script>
         // 🔥🔥 ВСТАВЬ СЮДА КЛЮЧ ОТ IMGBB (шаг 1) 🔥🔥
-        const IMGBB_KEY = "defe2d2fe4be844631b9578e37e009a0"; 
+        let IMGBB_KEY = "";
+        
+        // Попытка загрузить ключи из внешнего файла
+        if (window.STRANGER_KEYS) {
+            IMGBB_KEY = window.STRANGER_KEYS.IMGBB_KEY;
+        }
 
         async function uploadImageToImgBB(input) {
             const file = input.files[0];
@@ -533,15 +546,16 @@
 
         // 🔥🔥 ВСТАВИТЬ КОНФИГ ТУТ 🔥🔥
         
-        const firebaseConfig = {
-  apiKey: "AIzaSyAwASaR4X7QBHOsMcVDupuDXSGnIH5lnTE",
-  authDomain: "stranger-shop.firebaseapp.com",
-  projectId: "stranger-shop",
-  storageBucket: "stranger-shop.firebasestorage.app",
-  messagingSenderId: "227186405685",
-  appId: "1:227186405685:web:911af3b5d69299bf63dc7c",
-  measurementId: "G-BQ7LTEKQHD"
-};
+        let firebaseConfig = {
+            // apiKey: "...",
+            // authDomain: "...",
+            // ...
+        };
+        
+        // Попытка загрузить ключи из внешнего файла
+        if (window.STRANGER_KEYS && window.STRANGER_KEYS.FIREBASE_CONFIG) {
+            firebaseConfig = window.STRANGER_KEYS.FIREBASE_CONFIG;
+        }
 
         let db;
 
@@ -584,13 +598,14 @@
 
         // 2. DATA DEFINITIONS
         
+        // 🔥 ОБНОВЛЕННЫЕ КАТЕГОРИИ
         const categories = [
             { id: 'all', name: 'ВСЕ МАТЕРИАЛЫ' },
-            { id: '3d', name: 'Стикерпаки' },
-            { id: 'kinder', name: 'ЯЙЦА ДЕМОГОРГОНА' },
-            { id: 'passport', name: 'ДОКУМЕНТЫ' },
+            { id: 'passport', name: 'ПРОПУСКА' },
+            { id: 'scent', name: 'ЛАБОРАТОРИЯ' },
+            { id: 'kinder', name: 'ЗАНАЧКА' },
             { id: 'shopper', name: 'ВЕЩМЕШКИ' },
-            { id: 'scent', name: 'ЭФИРЫ' },
+            { id: '3d', name: 'КАСТОМ' },
         ];
 
         const quizData = [
@@ -603,40 +618,38 @@
         // ⚠️ ВАЖНО: Эти данные используются только при первом запуске, если база пуста.
         // Мы НЕ загружаем их в базу автоматически, чтобы не затереть ваши труды.
         let products = [
-            { id: 1, name: "Hellfire Club T-Shirt", category: 'tshirt', price: 2500, stock: 12, image: "https://placehold.co/400x400/1a1a1a/e71d36?text=Hellfire", desc: "Официальная униформа клуба.", popular: true },
-            { id: 4, name: "Eggo Waffles Box", category: 'food', price: 1200, stock: 4, image: "https://placehold.co/400x400/1a1a1a/e71d36?text=Eggos", desc: "Лимитированная серия.", popular: true },
-            { id: 5, name: "Walkie-Talkie Pro", category: 'tech', price: 4500, stock: 2, image: "https://placehold.co/400x400/1a1a1a/e71d36?text=Radio", desc: "Ловит частоты Изнанки.", popular: true },
-            { id: 8, name: "Loot Bag 'Starcourt'", category: 'shopper', price: 1200, stock: 9, image: "https://placehold.co/400x400/1a1a1a/e71d36?text=Shopper", desc: "Прочный шоппер из молла.", popular: false },
-            { id: 19, name: "Hellfire Tote", category: 'shopper', price: 1300, stock: 4, image: "https://placehold.co/400x400/1a1a1a/e71d36?text=HF+Bag", desc: "Сумка для D&D.", popular: false },
-            { id: 20, name: "Family Video Bag", category: 'shopper', price: 1100, stock: 12, image: "https://placehold.co/400x400/1a1a1a/e71d36?text=Video+Bag", desc: "Шоппер видеопроката.", popular: false },
-            { id: 21, name: "Palace Arcade", category: 'shopper', price: 1250, stock: 6, image: "https://placehold.co/400x400/1a1a1a/e71d36?text=Arcade", desc: "Сумка для жетонов.", popular: false },
-            { id: 22, name: "Hawkins High Sack", category: 'shopper', price: 1400, stock: 8, image: "https://placehold.co/400x400/1a1a1a/e71d36?text=School+Bag", desc: "Сменка 'Тигров'.", popular: false },
-            { id: 9, name: "Demogorgon Egg", category: 'kinder', price: 2000, stock: 3, image: "https://placehold.co/400x400/1a1a1a/e71d36?text=EGG", desc: "Сюрприз внутри... опасный?", popular: false },
-            { id: 23, name: "Dart's Special", category: 'kinder', price: 2100, stock: 5, image: "https://placehold.co/400x400/1a1a1a/e71d36?text=Nougat+Egg", desc: "Вкус нуги.", popular: false },
-            { id: 24, name: "Mind Flayer Dark", category: 'kinder', price: 2200, stock: 2, image: "https://placehold.co/400x400/1a1a1a/e71d36?text=Dark+Egg", desc: "Темный шоколад.", popular: false },
-            { id: 10, name: "Essence of Void", category: 'scent', price: 1500, stock: 10, image: "https://placehold.co/400x400/1a1a1a/e71d36?text=Scent", desc: "Аромат озона.", popular: false },
-            { id: 30, name: "Waffle Syrup", category: 'scent', price: 1400, stock: 15, image: "https://placehold.co/400x400/1a1a1a/e71d36?text=Syrup", desc: "Запах завтрака.", popular: false },
-            { id: 31, name: "Arcade Popcorn", category: 'scent', price: 1400, stock: 8, image: "https://placehold.co/400x400/1a1a1a/e71d36?text=Popcorn", desc: "Атмосфера Аркады.", popular: false },
-            { id: 32, name: "Upside Down Ash", category: 'scent', price: 1600, stock: 4, image: "https://placehold.co/400x400/1a1a1a/e71d36?text=Ash", desc: "Запах пепла.", popular: false },
-            { id: 33, name: "Steve's Hairspray", category: 'scent', price: 1800, stock: 3, image: "https://placehold.co/400x400/1a1a1a/e71d36?text=Hair", desc: "Секрет укладки.", popular: false },
-            { id: 34, name: "Forest Rain '83", category: 'scent', price: 1500, stock: 12, image: "https://placehold.co/400x400/1a1a1a/e71d36?text=Rain", desc: "Запах леса.", popular: false },
-            // Стикерпаки (Было 7, оставил 5)
-            { id: 6, name: "D20 Critical", category: '3d', price: 300, stock: 40, image: "https://placehold.co/400x400/1a1a1a/e71d36?text=D20", desc: "Стикер D20.", popular: false },
-            { id: 14, name: "Eleven's Power", category: '3d', price: 350, stock: 35, image: "https://placehold.co/400x400/1a1a1a/e71d36?text=011+Hand", desc: "Рука Оди.", popular: false },
-            { id: 25, name: "Demogorgon Smile", category: '3d', price: 350, stock: 30, image: "https://placehold.co/400x400/1a1a1a/e71d36?text=Demo+Face", desc: "Пасть монстра.", popular: false },
-            { id: 26, name: "Hopper's Star", category: '3d', price: 350, stock: 25, image: "https://placehold.co/400x400/1a1a1a/e71d36?text=Sheriff", desc: "Значок шерифа.", popular: false },
-            { id: 27, name: "Max's Walkman", category: '3d', price: 400, stock: 20, image: "https://placehold.co/400x400/1a1a1a/e71d36?text=Walkman", desc: "Плеер Макс.", popular: false },
+            // ПРОПУСКА
             { id: 7, name: "Hawkins Lab ID", category: 'passport', price: 900, stock: 10, image: "https://placehold.co/400x400/1a1a1a/e71d36?text=ID+Cover", desc: "Обложка сотрудника.", popular: false },
             { id: 54, name: "Snow Ball Ticket", category: 'passport', price: 800, stock: 15, image: "https://placehold.co/400x400/1a1a1a/e71d36?text=Ticket", desc: "Билет на бал.", popular: false },
             { id: 55, name: "Will's Drawing", category: 'passport', price: 700, stock: 8, image: "https://placehold.co/400x400/1a1a1a/e71d36?text=Draw", desc: "Рисунок Тень.", popular: false },
             { id: 56, name: "Hopper's Letter", category: 'passport', price: 600, stock: 5, image: "https://placehold.co/400x400/1a1a1a/e71d36?text=Letter", desc: "Письмо Оди.", popular: false },
             { id: 57, name: "Ru Code", category: 'passport', price: 850, stock: 12, image: "https://placehold.co/400x400/1a1a1a/e71d36?text=Code", desc: "Шифр русских.", popular: false },
-            { id: 58, name: "Character Sheet", category: 'passport', price: 500, stock: 20, image: "https://placehold.co/400x400/1a1a1a/e71d36?text=D&D", desc: "Лист Уилла Мудрого.", popular: false },
-            { id: 59, name: "Hawkins Post", category: 'passport', price: 400, stock: 30, image: "https://placehold.co/400x400/1a1a1a/e71d36?text=News", desc: "Газета.", popular: false },
-            { id: 60, name: "Missing Flyer", category: 'passport', price: 300, stock: 40, image: "https://placehold.co/400x400/1a1a1a/e71d36?text=Will", desc: "Пропажа Уилла.", popular: false },
-            { id: 61, name: "Barb Flyer", category: 'passport', price: 300, stock: 35, image: "https://placehold.co/400x400/1a1a1a/e71d36?text=Barb", desc: "Пропажа Барб.", popular: false },
-            { id: 62, name: "Bob's Map", category: 'passport', price: 750, stock: 7, image: "https://placehold.co/400x400/1a1a1a/e71d36?text=Map", desc: "Карта тоннелей.", popular: false },
-            { id: 63, name: "Lab Keycard", category: 'passport', price: 950, stock: 3, image: "https://placehold.co/400x400/1a1a1a/e71d36?text=Key", desc: "Желтый допуск.", popular: false }
+            
+            // ЛАБОРАТОРИЯ
+            { id: 10, name: "Essence of Void", category: 'scent', price: 1500, stock: 10, image: "https://placehold.co/400x400/1a1a1a/e71d36?text=Scent", desc: "Аромат озона.", popular: false },
+            { id: 30, name: "Waffle Syrup", category: 'scent', price: 1400, stock: 15, image: "https://placehold.co/400x400/1a1a1a/e71d36?text=Syrup", desc: "Запах завтрака.", popular: false },
+            { id: 31, name: "Arcade Popcorn", category: 'scent', price: 1400, stock: 8, image: "https://placehold.co/400x400/1a1a1a/e71d36?text=Popcorn", desc: "Атмосфера Аркады.", popular: false },
+            { id: 32, name: "Upside Down Ash", category: 'scent', price: 1600, stock: 4, image: "https://placehold.co/400x400/1a1a1a/e71d36?text=Ash", desc: "Запах пепла.", popular: false },
+            { id: 33, name: "Steve's Hairspray", category: 'scent', price: 1800, stock: 3, image: "https://placehold.co/400x400/1a1a1a/e71d36?text=Hair", desc: "Секрет укладки.", popular: false },
+            
+            // ЗАНАЧКА
+            { id: 9, name: "Demogorgon Egg", category: 'kinder', price: 2000, stock: 3, image: "https://placehold.co/400x400/1a1a1a/e71d36?text=EGG", desc: "Сюрприз внутри... опасный?", popular: false },
+            { id: 23, name: "Dart's Special", category: 'kinder', price: 2100, stock: 5, image: "https://placehold.co/400x400/1a1a1a/e71d36?text=Nougat+Egg", desc: "Вкус нуги.", popular: false },
+            { id: 24, name: "Mind Flayer Dark", category: 'kinder', price: 2200, stock: 2, image: "https://placehold.co/400x400/1a1a1a/e71d36?text=Dark+Egg", desc: "Темный шоколад.", popular: false },
+            
+            // ВЕЩМЕШКИ
+            { id: 8, name: "Loot Bag 'Starcourt'", category: 'shopper', price: 1200, stock: 9, image: "https://placehold.co/400x400/1a1a1a/e71d36?text=Shopper", desc: "Прочный шоппер из молла.", popular: false },
+            { id: 19, name: "Hellfire Tote", category: 'shopper', price: 1300, stock: 4, image: "https://placehold.co/400x400/1a1a1a/e71d36?text=HF+Bag", desc: "Сумка для D&D.", popular: false },
+            { id: 20, name: "Family Video Bag", category: 'shopper', price: 1100, stock: 12, image: "https://placehold.co/400x400/1a1a1a/e71d36?text=Video+Bag", desc: "Шоппер видеопроката.", popular: false },
+            { id: 21, name: "Palace Arcade", category: 'shopper', price: 1250, stock: 6, image: "https://placehold.co/400x400/1a1a1a/e71d36?text=Arcade", desc: "Сумка для жетонов.", popular: false },
+            { id: 22, name: "Hawkins High Sack", category: 'shopper', price: 1400, stock: 8, image: "https://placehold.co/400x400/1a1a1a/e71d36?text=School+Bag", desc: "Сменка 'Тигров'.", popular: false },
+            
+            // КАСТОМ (5 ШТУК)
+            { id: 6, name: "D20 Critical", category: '3d', price: 300, stock: 40, image: "https://placehold.co/400x400/1a1a1a/e71d36?text=D20", desc: "Стикер D20.", popular: false },
+            { id: 14, name: "Eleven's Power", category: '3d', price: 350, stock: 35, image: "https://placehold.co/400x400/1a1a1a/e71d36?text=011+Hand", desc: "Рука Оди.", popular: false },
+            { id: 25, name: "Demogorgon Smile", category: '3d', price: 350, stock: 30, image: "https://placehold.co/400x400/1a1a1a/e71d36?text=Demo+Face", desc: "Пасть монстра.", popular: false },
+            { id: 26, name: "Hopper's Star", category: '3d', price: 350, stock: 25, image: "https://placehold.co/400x400/1a1a1a/e71d36?text=Sheriff", desc: "Значок шерифа.", popular: false },
+            { id: 27, name: "Max's Walkman", category: '3d', price: 400, stock: 20, image: "https://placehold.co/400x400/1a1a1a/e71d36?text=Walkman", desc: "Плеер Макс.", popular: false }
         ];
 
         const secretChannels = [
@@ -846,6 +859,12 @@
             // 🔥 Save quiz completion to local storage
             localStorage.setItem('iznanka_visited', 'true');
 
+            // Получаем ссылку на канал из ключей, если есть
+            let channelUrl = "https://t.me/";
+            if (window.STRANGER_KEYS && window.STRANGER_KEYS.TELEGRAM_CHANNEL_URL) {
+                channelUrl = window.STRANGER_KEYS.TELEGRAM_CHANNEL_URL;
+            }
+
             const quizView = document.getElementById('quiz-view');
             quizView.innerHTML = `
                 <div class="text-center fade-in flex flex-col items-center w-full max-w-md">
@@ -854,7 +873,7 @@
                         <button onclick="enterShop()" class="retro-btn px-8 py-4 text-xl font-bold tracking-widest w-full hover:bg-red-900/20">МАГАЗИН</button>
                         <button onclick="enterGacha()" class="retro-btn cyan px-8 py-4 text-xl font-bold tracking-widest w-full shadow-[0_0_10px_rgba(34,211,238,0.3)]">БРОСОК СУДЬБЫ</button>
                         <button onclick="alert('Тест скоро будет доступен. Лаборатория закрыта.')" class="retro-btn px-8 py-4 text-xl font-bold tracking-widest w-full hover:bg-red-900/20 opacity-70">НАЧАТЬ ЭКСПЕРИМЕНТ</button>
-                        <button onclick="window.open('https://t.me/ТВОЙ_КАНАЛ', '_blank')" class="retro-btn px-8 py-4 text-xl font-bold tracking-widest w-full hover:bg-red-900/20">РАДИОЭФИР</button>
+                        <button onclick="window.open('${channelUrl}', '_blank')" class="retro-btn px-8 py-4 text-xl font-bold tracking-widest w-full hover:bg-red-900/20">РАДИОЭФИР</button>
                     </div>
                 </div>
             `;
@@ -1307,10 +1326,22 @@
             else { panel.classList.add('translate-x-full'); setTimeout(() => modal.classList.add('hidden'), 300); }
         }
 
-        function checkout() {
-            if (cart.length === 0) return;
-            alert(`Заказ отправлен!\nСумма: ${document.getElementById('cart-total').innerText}\nТовары: ${cart.map(i => i.name).join(', ')}`);
-            cart = []; updateCartUI(); toggleCart();
+        function checkoutInstant() {
+            if(cart.length === 0) return alert("Корзина пуста!");
+            const total = cart.reduce((sum, item) => sum + item.price, 0);
+            
+            const orderData = {
+                type: "PICKUP",
+                items: cart,
+                total: total,
+                date: new Date().toISOString()
+            };
+            
+            console.log("Instant Checkout:", orderData);
+            alert(`🤝 ОПЛАТА НА МЕСТЕ!\nСумма: ${total} ₽\nПокажите этот экран водителю, чтобы получить товар.`);
+            cart = [];
+            updateCartUI();
+            toggleCart();
         }
 
         function openDelivery() {
@@ -1329,25 +1360,43 @@
             document.getElementById('delivery-modal').classList.add('hidden');
         }
 
+        function backToCart() {
+            toggleDelivery();
+            // Small timeout to allow transition
+            setTimeout(() => {
+                const modal = document.getElementById('cart-modal');
+                const panel = document.getElementById('cart-panel');
+                modal.classList.remove('hidden'); 
+                // Ensure panel slides in correctly
+                requestAnimationFrame(() => {
+                    panel.classList.remove('translate-x-full');
+                });
+            }, 50);
+        }
+
         function processPayment() {
             const name = document.getElementById('del-name').value;
             const phone = document.getElementById('del-phone').value;
             const address = document.getElementById('del-address').value;
+            const time = document.getElementById('del-time').value;
             
-            if(!name || !phone || !address) return alert("Заполните все поля!");
+            if(!name || !phone || !address || !time) return alert("Заполните все поля!");
             
             // Here we would normally integrate payment
             // For now, simulating success and sending to console/alert
             
             const orderData = {
+                type: "DELIVERY",
                 user: name,
                 phone: phone,
                 address: address,
+                time: time,
                 items: cart,
-                total: cart.reduce((sum, item) => sum + item.price, 0)
+                total: cart.reduce((sum, item) => sum + item.price, 0),
+                date: new Date().toISOString()
             };
             
-            console.log("Order:", orderData);
+            console.log("Delivery Order:", orderData);
             alert(`ЗАКАЗ ПРИНЯТ!\nОплата будет обработана оператором.\nЖдите звонка на ${phone}`);
             
             cart = [];
