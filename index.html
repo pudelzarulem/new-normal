@@ -85,7 +85,7 @@
         .d20-die.rolling .d20-number { opacity: 0.3; filter: blur(4px); }
 
         /* --- Components --- */
-        .retro-card { background: rgba(0, 0, 0, 0.7); border: 1px solid #333; transition: all 0.3s ease; position: relative; overflow: hidden; }
+        .retro-card { background: rgba(0, 0, 0, 0.7); border: 1px solid #333; transition: all 0.3s ease; position: relative; overflow: hidden; cursor: pointer; }
         .retro-card:hover { border-color: var(--stranger-red); box-shadow: 0 0 15px rgba(255, 0, 51, 0.4); transform: translateY(-2px); }
         
         .retro-btn { border: 1px solid var(--stranger-red); color: var(--stranger-red); text-transform: uppercase; letter-spacing: 1px; transition: all 0.2s ease; background: rgba(231, 29, 54, 0.05); cursor: pointer; box-shadow: 0 0 5px rgba(255, 0, 51, 0.2); }
@@ -349,6 +349,43 @@
             </div>
         </div>
 
+        <!-- PRODUCT DETAILS MODAL (НОВОЕ ОКНО ПРОСМОТРА) -->
+        <div id="product-modal" class="fixed inset-0 z-[60] hidden flex items-center justify-center p-4">
+            <div class="absolute inset-0 bg-black/90 backdrop-blur-md" onclick="closeProductModal()"></div>
+            <div class="relative w-full max-w-lg bg-[#0a0a0a] border border-red-900/50 shadow-[0_0_50px_rgba(231,29,54,0.15)] flex flex-col fade-in overflow-hidden max-h-[90vh]">
+                
+                <button onclick="closeProductModal()" class="absolute top-2 right-2 z-20 text-white bg-black/50 rounded-full p-2 hover:bg-red-900 transition-colors">
+                    <i data-lucide="x" class="w-6 h-6"></i>
+                </button>
+
+                <div class="h-64 sm:h-80 bg-gray-900 relative">
+                    <img id="detail-image" src="" alt="" class="w-full h-full object-cover">
+                    <div class="absolute bottom-0 left-0 w-full h-20 bg-gradient-to-t from-black to-transparent"></div>
+                </div>
+
+                <div class="p-6 overflow-y-auto">
+                    <div class="flex justify-between items-start mb-4">
+                        <h2 id="detail-name" class="text-2xl font-bold text-white leading-tight font-mono tracking-wide"></h2>
+                    </div>
+                    
+                    <p id="detail-desc" class="text-gray-400 text-sm leading-relaxed mb-6 font-mono"></p>
+                    
+                    <div class="flex items-end justify-between border-t border-gray-800 pt-6">
+                        <div>
+                            <div class="text-xs text-gray-500 mb-1 font-mono uppercase">Цена</div>
+                            <div id="detail-price" class="text-3xl font-bold text-red-500 text-shadow-[0_0_10px_rgba(255,0,0,0.3)]"></div>
+                        </div>
+                        <div class="text-right">
+                            <div id="detail-stock" class="text-xs text-gray-500 mb-2 font-mono"></div>
+                            <button id="detail-add-btn" class="retro-btn px-6 py-3 font-bold text-lg flex items-center gap-2">
+                                <span>В КОРЗИНУ</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- CART MODAL -->
         <div id="cart-modal" class="fixed inset-0 z-[60] hidden">
             <div class="absolute inset-0 bg-black/80 backdrop-blur-sm" onclick="toggleCart()"></div>
@@ -480,7 +517,7 @@
         
         const categories = [
             { id: 'all', name: 'ВСЕ МАТЕРИАЛЫ' },
-            { id: '3d', name: '3D СТИКЕРЫ' },
+            { id: '3d', name: 'Стикерпаки' }, // Переименовали
             { id: 'kinder', name: 'ЯЙЦА ДЕМОГОРГОНА' },
             { id: 'passport', name: 'ДОКУМЕНТЫ' },
             { id: 'shopper', name: 'ВЕЩМЕШКИ' },
@@ -512,13 +549,13 @@
             { id: 32, name: "Upside Down Ash", category: 'scent', price: 1600, stock: 4, image: "https://placehold.co/400x400/1a1a1a/e71d36?text=Ash", desc: "Запах пепла.", popular: false },
             { id: 33, name: "Steve's Hairspray", category: 'scent', price: 1800, stock: 3, image: "https://placehold.co/400x400/1a1a1a/e71d36?text=Hair", desc: "Секрет укладки.", popular: false },
             { id: 34, name: "Forest Rain '83", category: 'scent', price: 1500, stock: 12, image: "https://placehold.co/400x400/1a1a1a/e71d36?text=Rain", desc: "Запах леса.", popular: false },
+            // Стикерпаки (Было 7, оставил 5)
             { id: 6, name: "D20 Critical", category: '3d', price: 300, stock: 40, image: "https://placehold.co/400x400/1a1a1a/e71d36?text=D20", desc: "Стикер D20.", popular: false },
             { id: 14, name: "Eleven's Power", category: '3d', price: 350, stock: 35, image: "https://placehold.co/400x400/1a1a1a/e71d36?text=011+Hand", desc: "Рука Оди.", popular: false },
             { id: 25, name: "Demogorgon Smile", category: '3d', price: 350, stock: 30, image: "https://placehold.co/400x400/1a1a1a/e71d36?text=Demo+Face", desc: "Пасть монстра.", popular: false },
             { id: 26, name: "Hopper's Star", category: '3d', price: 350, stock: 25, image: "https://placehold.co/400x400/1a1a1a/e71d36?text=Sheriff", desc: "Значок шерифа.", popular: false },
             { id: 27, name: "Max's Walkman", category: '3d', price: 400, stock: 20, image: "https://placehold.co/400x400/1a1a1a/e71d36?text=Walkman", desc: "Плеер Макс.", popular: false },
-            { id: 28, name: "Scoops Ahoy", category: '3d', price: 300, stock: 45, image: "https://placehold.co/400x400/1a1a1a/e71d36?text=Ahoy+Logo", desc: "Логотип кафе.", popular: false },
-            { id: 29, name: "Friends Don't Lie", category: '3d', price: 350, stock: 38, image: "https://placehold.co/400x400/1a1a1a/e71d36?text=Waffle", desc: "Текстура вафли. Главное правило.", popular: false },
+            // Удалены: 28 Scoops Ahoy, 29 Friends Don't Lie
             { id: 7, name: "Hawkins Lab ID", category: 'passport', price: 900, stock: 10, image: "https://placehold.co/400x400/1a1a1a/e71d36?text=ID+Cover", desc: "Обложка сотрудника.", popular: false },
             { id: 54, name: "Snow Ball Ticket", category: 'passport', price: 800, stock: 15, image: "https://placehold.co/400x400/1a1a1a/e71d36?text=Ticket", desc: "Билет на бал.", popular: false },
             { id: 55, name: "Will's Drawing", category: 'passport', price: 700, stock: 8, image: "https://placehold.co/400x400/1a1a1a/e71d36?text=Draw", desc: "Рисунок Тень.", popular: false },
@@ -657,6 +694,9 @@
         }
 
         function finishQuiz() {
+            // 🔥 Save quiz completion to local storage
+            localStorage.setItem('iznanka_visited', 'true');
+
             const quizView = document.getElementById('quiz-view');
             quizView.innerHTML = `
                 <div class="text-center fade-in flex flex-col items-center w-full max-w-md">
@@ -665,7 +705,7 @@
                         <button onclick="enterShop()" class="retro-btn px-8 py-4 text-xl font-bold tracking-widest w-full hover:bg-red-900/20">МАГАЗИН</button>
                         <button onclick="enterGacha()" class="retro-btn cyan px-8 py-4 text-xl font-bold tracking-widest w-full shadow-[0_0_10px_rgba(34,211,238,0.3)]">БРОСОК СУДЬБЫ</button>
                         <button onclick="alert('Тест скоро будет доступен. Лаборатория закрыта.')" class="retro-btn px-8 py-4 text-xl font-bold tracking-widest w-full hover:bg-red-900/20 opacity-70">НАЧАТЬ ЭКСПЕРИМЕНТ</button>
-                        <button onclick="window.open('https://t.me/ТВОЙ_КАНАЛ', '_blank')" class="retro-btn px-8 py-4 text-xl font-bold tracking-widest w-full hover:bg-red-900/20">РАДИОЭФИР</button>
+                        <button onclick="window.open('https://t.me/radioIznanka', '_blank')" class="retro-btn px-8 py-4 text-xl font-bold tracking-widest w-full hover:bg-red-900/20">РАДИОЭФИР</button>
                     </div>
                 </div>
             `;
@@ -843,6 +883,39 @@
             document.getElementById('admin-modal').classList.add('hidden');
         }
 
+        // --- NEW PRODUCT DETAILS LOGIC ---
+        function openProductDetails(id) {
+            const product = products.find(p => p.id === id);
+            if (!product) return;
+
+            document.getElementById('detail-image').src = product.image;
+            document.getElementById('detail-name').innerText = product.name;
+            document.getElementById('detail-desc').innerText = product.desc;
+            document.getElementById('detail-price').innerText = `${product.price} ₽`;
+            
+            const stockEl = document.getElementById('detail-stock');
+            if(product.stock < 5) {
+                stockEl.innerText = `ОСТАТОК: ${product.stock} (МАЛО!)`;
+                stockEl.className = "text-xs text-red-500 mb-2 font-mono animate-pulse";
+            } else {
+                stockEl.innerText = `ОСТАТОК: ${product.stock}`;
+                stockEl.className = "text-xs text-gray-500 mb-2 font-mono";
+            }
+
+            // Настраиваем кнопку добавления в корзину внутри модалки
+            const btn = document.getElementById('detail-add-btn');
+            btn.onclick = () => {
+                addToCart(product.id);
+                closeProductModal();
+            };
+
+            document.getElementById('product-modal').classList.remove('hidden');
+        }
+
+        function closeProductModal() {
+            document.getElementById('product-modal').classList.add('hidden');
+        }
+
         async function saveProductChange() {
             const id = document.getElementById('edit-id').value;
             const collectionName = document.getElementById('edit-collection').value; // 'products' or 'gacha'
@@ -877,7 +950,7 @@
             }
         }
 
-        function getProductCardHTML(product, isLarge = false) {
+        function getProductCardHTML(product) {
              const stockClass = product.stock < 5 ? 'text-red-500 animate-pulse' : 'text-gray-500';
              
              // Admin Edit Button
@@ -888,11 +961,10 @@
              ` : '';
 
              return `
-                <div class="retro-card flex flex-col h-full group ${isLarge ? 'border-red-900/60' : ''} fade-in">
-                    <div class="relative overflow-hidden ${isLarge ? 'h-48 md:h-72' : 'h-36 md:h-56'} bg-gray-900 border-b border-gray-800">
+                <div class="retro-card flex flex-col h-full group fade-in" onclick="openProductDetails(${product.id})">
+                    <div class="relative overflow-hidden h-36 md:h-56 bg-gray-900 border-b border-gray-800">
                         ${editBtn}
                         <img src="${product.image}" alt="${product.name}" class="w-full h-full object-cover opacity-80 group-hover:opacity-100 group-hover:scale-110 transition-transform duration-500">
-                        ${isLarge ? '<div class="absolute top-2 right-2 bg-red-600 text-black text-[10px] md:text-xs font-bold px-1.5 py-0.5 md:px-2 md:py-1 shadow-lg shadow-red-500/50">HIT</div>' : ''}
                     </div>
                     <div class="p-3 md:p-4 flex flex-col flex-grow">
                         <h3 class="text-sm md:text-lg font-bold text-white mb-1 md:mb-2 leading-tight line-clamp-2">${product.name}</h3>
@@ -901,7 +973,7 @@
                             <span class="text-red-500 font-bold text-sm md:text-base text-shadow-[0_0_5px_red]">${product.price} ₽</span>
                             <div class="flex flex-col items-end gap-1">
                                 <span class="text-[8px] md:text-[10px] ${stockClass} font-mono tracking-wider">ОСТ: ${product.stock}</span>
-                                <button onclick="addToCart(${product.id})" class="retro-btn px-2 py-1 md:px-3 text-[10px] md:text-xs font-bold flex items-center gap-1 md:gap-2"><span>+</span> <span class="hidden sm:inline">В КОРЗИНУ</span><span class="sm:hidden">ВЗЯТЬ</span></button>
+                                <button onclick="event.stopPropagation(); addToCart(${product.id})" class="retro-btn px-2 py-1 md:px-3 text-[10px] md:text-xs font-bold flex items-center gap-1 md:gap-2"><span>+</span> <span class="hidden sm:inline">В КОРЗИНУ</span><span class="sm:hidden">ВЗЯТЬ</span></button>
                             </div>
                         </div>
                     </div>
@@ -1013,7 +1085,7 @@
             if (activeCategory !== 'all') { itemsToDisplay = products.filter(p => p.category === activeCategory); }
 
             if (itemsToDisplay.length > 0) {
-                html += `<div class="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-6 fade-in">${itemsToDisplay.map(p => getProductCardHTML(p, p.popular)).join('')}</div>`;
+                html += `<div class="grid grid-cols-2 md:grid-cols-3 gap-3 md:gap-6 fade-in">${itemsToDisplay.map(p => getProductCardHTML(p)).join('')}</div>`;
             } else {
                 html += `<div class="text-center py-10 text-gray-500 font-mono fade-in">ПУСТОТА...</div>`;
             }
@@ -1024,9 +1096,16 @@
         function addToCart(id) {
             const product = products.find(p => p.id === id);
             cart.push(product); updateCartUI();
-            const btn = event.currentTarget;
-            btn.innerHTML = "ДОБАВЛЕНО!"; btn.classList.add("bg-red-900", "text-white");
-            setTimeout(() => { btn.innerHTML = `<span>+</span> <span class="hidden sm:inline">В КОРЗИНУ</span><span class="sm:hidden">ВЗЯТЬ</span>`; btn.classList.remove("bg-red-900", "text-white"); }, 1000);
+            
+            // Если мы нажали кнопку в карточке (а не в модалке), даем обратную связь там
+            if(event && event.currentTarget) {
+                const btn = event.currentTarget;
+                // Проверяем, это кнопка модалки или карточки
+                if(btn.id !== 'detail-add-btn') {
+                    btn.innerHTML = "ДОБАВЛЕНО!"; btn.classList.add("bg-red-900", "text-white");
+                    setTimeout(() => { btn.innerHTML = `<span>+</span> <span class="hidden sm:inline">В КОРЗИНУ</span><span class="sm:hidden">ВЗЯТЬ</span>`; btn.classList.remove("bg-red-900", "text-white"); }, 1000);
+                }
+            }
         }
 
         function removeFromCart(index) { cart.splice(index, 1); updateCartUI(); }
@@ -1078,7 +1157,17 @@
 
         function resetApp() { location.reload(); }
 
-        window.onload = () => { renderQuiz(); initParticles(); animate(); };
+        // 🔥 MODIFIED WINDOW ONLOAD FOR QUIZ SKIPPING
+        window.onload = () => { 
+            // Check if quiz already done
+            if (localStorage.getItem('iznanka_visited')) {
+                finishQuiz();
+            } else {
+                renderQuiz(); 
+            }
+            initParticles(); 
+            animate(); 
+        };
 
         const canvas = document.getElementById('upside-down-canvas');
         const ctx = canvas.getContext('2d');
