@@ -249,9 +249,14 @@
                     <div class="flex justify-between items-end mb-6">
                         <h3 class="text-gray-500 text-xs tracking-[0.2em]">ВОЗМОЖНАЯ ДОБЫЧА (32)</h3>
                         <!-- ADMIN TOGGLE GACHA -->
-                        <button onclick="toggleAdminMode()" class="text-[10px] font-mono tracking-widest border border-gray-800 px-2 py-1 hover:border-cyan-500 hover:text-cyan-500 transition-colors" id="gacha-admin-btn">
-                            УПРАВЛЕНИЕ
-                        </button>
+                        <div class="flex gap-2">
+                            <button onclick="loadProductsFromDb(true)" class="hidden text-[10px] font-mono tracking-widest border border-cyan-500 px-2 py-1 text-cyan-500 transition-colors" id="gacha-refresh-btn">
+                                🔄 ОБНОВИТЬ
+                            </button>
+                            <button onclick="toggleAdminMode()" class="text-[10px] font-mono tracking-widest border border-gray-800 px-2 py-1 hover:border-cyan-500 hover:text-cyan-500 transition-colors" id="gacha-admin-btn">
+                                УПРАВЛЕНИЕ
+                            </button>
+                        </div>
                     </div>
 
                     <div id="gacha-grid" class="grid grid-cols-4 sm:grid-cols-6 md:grid-cols-8 gap-2 opacity-80">
@@ -295,11 +300,17 @@
             </div>
         </main>
 
-        <!-- ADMIN EDIT MODAL (С ЗАГРУЗКОЙ ФОТО) -->
+        <!-- ADMIN EDIT MODAL (С БЭКАПОМ) -->
         <div id="admin-modal" class="fixed inset-0 z-[70] hidden flex items-center justify-center p-4">
             <div class="absolute inset-0 bg-black/90 backdrop-blur-md" onclick="toggleAdminModal()"></div>
             <div class="relative w-full max-w-md bg-gray-900 border border-cyan-500/50 shadow-[0_0_30px_rgba(34,211,238,0.2)] p-6 fade-in overflow-y-auto max-h-[90vh]">
-                <h3 class="text-xl font-bold text-cyan-400 mb-6 font-mono tracking-widest text-center">ИЗМЕНЕНИЕ РЕАЛЬНОСТИ</h3>
+                <div class="flex justify-between items-center mb-6">
+                    <h3 class="text-xl font-bold text-cyan-400 font-mono tracking-widest">ИЗМЕНЕНИЕ РЕАЛЬНОСТИ</h3>
+                    <!-- КНОПКА БЭКАПА -->
+                    <button onclick="exportDatabase()" class="text-xs bg-gray-800 hover:bg-gray-700 px-2 py-1 rounded border border-gray-600 text-gray-300 flex items-center gap-1" title="Скачать копию базы данных">
+                        <i data-lucide="download" class="w-3 h-3"></i> БЭКАП
+                    </button>
+                </div>
                 <input type="hidden" id="edit-id">
                 <input type="hidden" id="edit-collection"> <!-- 🔥 Stores 'products' or 'gacha' -->
                 
@@ -343,7 +354,7 @@
                     </div>
                 </div>
                 <div class="mt-8 flex gap-3">
-                    <button onclick="saveProductChange()" class="flex-1 retro-btn cyan py-3 font-bold">СОХРАНИТЬ</button>
+                    <button id="save-btn" onclick="saveProductChange()" class="flex-1 retro-btn cyan py-3 font-bold">СОХРАНИТЬ</button>
                     <button onclick="toggleAdminModal()" class="flex-1 retro-btn py-3 font-bold text-gray-500 border-gray-500 hover:text-white">ОТМЕНА</button>
                 </div>
             </div>
@@ -461,9 +472,6 @@
         import { getFirestore, collection, getDocs, doc, updateDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
         // 🔥🔥 ВСТАВИТЬ КОНФИГ ТУТ 🔥🔥
-        // 1. Создай проект на console.firebase.google.com
-        // 2. Создай Web App
-        // 3. Скопируй const firebaseConfig = { ... } и вставь ниже ВМЕСТО пустых кавычек
         
         const firebaseConfig = {
   apiKey: "AIzaSyAwASaR4X7QBHOsMcVDupuDXSGnIH5lnTE",
@@ -517,7 +525,7 @@
         
         const categories = [
             { id: 'all', name: 'ВСЕ МАТЕРИАЛЫ' },
-            { id: '3d', name: 'Стикерпаки' }, // Переименовали
+            { id: '3d', name: 'Стикерпаки' },
             { id: 'kinder', name: 'ЯЙЦА ДЕМОГОРГОНА' },
             { id: 'passport', name: 'ДОКУМЕНТЫ' },
             { id: 'shopper', name: 'ВЕЩМЕШКИ' },
@@ -530,7 +538,9 @@
             { q: "Время суток?", a: [{text: "Полдень", score:"n"}, {text: "Сумерки", score:"m"}, {text: "Глубокая ночь", score:"d"}] }
         ];
 
-        // INITIAL FALLBACK DATA (Will be uploaded to Firebase on first run)
+        // INITIAL FALLBACK DATA 
+        // ⚠️ ВАЖНО: Эти данные используются только при первом запуске, если база пуста.
+        // Мы НЕ загружаем их в базу автоматически, чтобы не затереть ваши труды.
         let products = [
             { id: 1, name: "Hellfire Club T-Shirt", category: 'tshirt', price: 2500, stock: 12, image: "https://placehold.co/400x400/1a1a1a/e71d36?text=Hellfire", desc: "Официальная униформа клуба.", popular: true },
             { id: 4, name: "Eggo Waffles Box", category: 'food', price: 1200, stock: 4, image: "https://placehold.co/400x400/1a1a1a/e71d36?text=Eggos", desc: "Лимитированная серия.", popular: true },
@@ -555,7 +565,6 @@
             { id: 25, name: "Demogorgon Smile", category: '3d', price: 350, stock: 30, image: "https://placehold.co/400x400/1a1a1a/e71d36?text=Demo+Face", desc: "Пасть монстра.", popular: false },
             { id: 26, name: "Hopper's Star", category: '3d', price: 350, stock: 25, image: "https://placehold.co/400x400/1a1a1a/e71d36?text=Sheriff", desc: "Значок шерифа.", popular: false },
             { id: 27, name: "Max's Walkman", category: '3d', price: 400, stock: 20, image: "https://placehold.co/400x400/1a1a1a/e71d36?text=Walkman", desc: "Плеер Макс.", popular: false },
-            // Удалены: 28 Scoops Ahoy, 29 Friends Don't Lie
             { id: 7, name: "Hawkins Lab ID", category: 'passport', price: 900, stock: 10, image: "https://placehold.co/400x400/1a1a1a/e71d36?text=ID+Cover", desc: "Обложка сотрудника.", popular: false },
             { id: 54, name: "Snow Ball Ticket", category: 'passport', price: 800, stock: 15, image: "https://placehold.co/400x400/1a1a1a/e71d36?text=Ticket", desc: "Билет на бал.", popular: false },
             { id: 55, name: "Will's Drawing", category: 'passport', price: 700, stock: 8, image: "https://placehold.co/400x400/1a1a1a/e71d36?text=Draw", desc: "Рисунок Тень.", popular: false },
@@ -569,41 +578,6 @@
             { id: 63, name: "Lab Keycard", category: 'passport', price: 950, stock: 3, image: "https://placehold.co/400x400/1a1a1a/e71d36?text=Key", desc: "Желтый допуск.", popular: false }
         ];
 
-        let gachaPool = [
-            { id: 201, name: "Аудиокассета", image: "https://placehold.co/400x400/1a1a1a/e71d36?text=Mixtape", desc: "Хиты 80-х." },
-            { id: 202, name: "Мини D20", image: "https://placehold.co/400x400/1a1a1a/e71d36?text=D20", desc: "Критический успех." },
-            { id: 203, name: "Бита Стива", image: "https://placehold.co/400x400/1a1a1a/e71d36?text=Bat", desc: "Бита Харрингтона." },
-            { id: 204, name: "Голова Демогоргона", image: "https://placehold.co/400x400/1a1a1a/e71d36?text=Head", desc: "Голова монстра." },
-            { id: 205, name: "Вафля Eggo", image: "https://placehold.co/400x400/1a1a1a/e71d36?text=Waffle", desc: "Завтрак чемпиона." },
-            { id: 206, name: "Кепка Дастина", image: "https://placehold.co/400x400/1a1a1a/e71d36?text=Hat", desc: "Кепка-талисман." },
-            { id: 207, name: "Рация", image: "https://placehold.co/400x400/1a1a1a/e71d36?text=Radio", desc: "Код красный!" },
-            { id: 208, name: "Рогатка", image: "https://placehold.co/400x400/1a1a1a/e71d36?text=Sling", desc: "Оружие Лукаса." },
-            { id: 209, name: "Скейтборд", image: "https://placehold.co/400x400/1a1a1a/e71d36?text=Skate", desc: "Стиль Безумной Макс." },
-            { id: 210, name: "Ключ от Камаро", image: "https://placehold.co/400x400/1a1a1a/e71d36?text=Key", desc: "Ключ Билли." },
-            { id: 211, name: "Якорь Ahoy", image: "https://placehold.co/400x400/1a1a1a/e71d36?text=Anchor", desc: "Scoops Ahoy!" },
-            { id: 212, name: "Жетон Hellfire", image: "https://placehold.co/400x400/1a1a1a/e71d36?text=Token", desc: "Знак клуба." },
-            { id: 213, name: "Истязатель Разума", image: "https://placehold.co/400x400/1a1a1a/e71d36?text=Spider", desc: "Тень над Хоукинсом." },
-            { id: 214, name: "Замок Байерсов", image: "https://placehold.co/400x400/1a1a1a/e71d36?text=Fort", desc: "Убежище Уилла." },
-            { id: 215, name: "Монета Аркады", image: "https://placehold.co/400x400/1a1a1a/e71d36?text=Coin", desc: "Вставь монету." },
-            { id: 216, name: "Ловушка Призрака", image: "https://placehold.co/400x400/1a1a1a/e71d36?text=Trap", desc: "Хэллоуин 84." },
-            { id: 217, name: "Гирлянда", image: "https://placehold.co/400x400/1a1a1a/e71d36?text=Light", desc: "R-U-N." },
-            { id: 218, name: "Колесо Велика", image: "https://placehold.co/400x400/1a1a1a/e71d36?text=Wheel", desc: "Велик Майка." },
-            { id: 219, name: "Звезда Шерифа", image: "https://placehold.co/400x400/1a1a1a/e71d36?text=Star", desc: "Закон и порядок." },
-            { id: 220, name: "VHS Кассета", image: "https://placehold.co/400x400/1a1a1a/e71d36?text=VHS", desc: "Запись с камер." },
-            { id: 301, name: "Значок Шерифа", image: "https://placehold.co/400x400/1a1a1a/e71d36?text=Pin", desc: "Значок шерифа Хоппера." },
-            { id: 302, name: "Член Клуба", image: "https://placehold.co/400x400/1a1a1a/e71d36?text=Pin+2", desc: "Участник AV клуба." },
-            { id: 303, name: "Друзья Не Врут", image: "https://placehold.co/400x400/1a1a1a/e71d36?text=Pin+011", desc: "Клятва друзей." },
-            { id: 304, name: "Сопящий", image: "https://placehold.co/400x400/1a1a1a/e71d36?text=Pin+MB", desc: "Любимое ругательство Оди." },
-            { id: 305, name: "Офигенно", image: "https://placehold.co/400x400/1a1a1a/e71d36?text=Pin+008", desc: "Стиль сестры Кали." },
-            { id: 306, name: "Тигр Хоукинса", image: "https://placehold.co/400x400/1a1a1a/e71d36?text=Pin+Tiger", desc: "Талисман школы Хоукинс." },
-            { id: 307, name: "Лагерь 'Знать Где'", image: "https://placehold.co/400x400/1a1a1a/e71d36?text=Pin+Camp", desc: "Научный лагерь '85." },
-            { id: 308, name: "Флаг (Секретный)", image: "https://placehold.co/400x400/1a1a1a/e71d36?text=Pin+Ru", desc: "Секретный трофей." },
-            { id: 309, name: "Президент AV Клуба", image: "https://placehold.co/400x400/1a1a1a/e71d36?text=Pin+AV", desc: "Президент радиоклуба." },
-            { id: 310, name: "Мастер Подземелий", image: "https://placehold.co/400x400/1a1a1a/e71d36?text=Pin+DM", desc: "Мастер подземелий." },
-            { id: 311, name: "Зомби-Мальчик", image: "https://placehold.co/400x400/1a1a1a/e71d36?text=Pin+Will", desc: "Прозвище Уилла." },
-            { id: 312, name: "Шпион", image: "https://placehold.co/400x400/1a1a1a/e71d36?text=Pin+Spy", desc: "Шпион Истязателя." }
-        ];
-
         const secretChannels = [
             { freq: 11.0, msg: "МАЙК? МАЙК, ЭТО ТЫ? Я ЗДЕСЬ... ХОЛОДНО...", type: "good" },
             { freq: 66.6, msg: "Я ВИЖУ ТЕБЯ. ЧАСЫ ПРОБИЛИ ЧЕТЫРЕ РАЗА.", type: "evil" }, // Vecna
@@ -613,16 +587,14 @@
         ];
 
         // --- FIREBASE HELPER FUNCTIONS ---
-        window.loadProductsFromDb = async function() {
+        window.loadProductsFromDb = async function(force = false) {
             if (!window.firebaseDb) return;
             try {
                 // 1. Load Products (Shop)
                 const querySnapshot = await window.firebaseGetDocs(window.firebaseCollection(window.firebaseDb, "products"));
                 if (querySnapshot.empty) {
-                    console.log("База пуста. Загружаем аварийный запас товаров...");
-                    products.forEach(async (p) => {
-                         await window.firebaseSet(window.firebaseDoc(window.firebaseDb, "products", p.id.toString()), p);
-                    });
+                    console.log("База пуста. Используем локальные данные, но НЕ перезаписываем базу.");
+                    // Ничего не делаем - products уже заполнен выше.
                 } else {
                     products = [];
                     querySnapshot.forEach((doc) => {
@@ -633,12 +605,7 @@
 
                 // 2. Load Gacha (Loot)
                 const gachaSnapshot = await window.firebaseGetDocs(window.firebaseCollection(window.firebaseDb, "gacha"));
-                if (gachaSnapshot.empty) {
-                    console.log("База Гачи пуста. Загружаем лут...");
-                    gachaPool.forEach(async (p) => {
-                         await window.firebaseSet(window.firebaseDoc(window.firebaseDb, "gacha", p.id.toString()), p);
-                    });
-                } else {
+                if (!gachaSnapshot.empty) {
                     gachaPool = [];
                     gachaSnapshot.forEach((doc) => {
                         gachaPool.push({ id: doc.id, ...doc.data() });
@@ -649,27 +616,80 @@
                 }
 
             } catch (e) {
-                console.error("ОШИБКА БАЗЫ! Включаем аварийный режим.", e);
-                alert("Внимание: Нет связи с облаком. Работаем в автономном режиме.");
+                console.error("ОШИБКА БАЗЫ! Работаем локально.", e);
+                alert("Ошибка связи с базой. Показаны сохраненные в коде данные.");
             }
             
             // Refresh views
             if (!document.getElementById('catalog-view').classList.contains('hidden')) renderProducts();
             if (!document.getElementById('gacha-view').classList.contains('hidden')) renderGacha();
+            
+            if(force) alert("Данные обновлены!");
         }
 
         async function saveProductToDb(prod, collectionName) {
             if (window.firebaseDb) {
                 try {
-                    const docRef = window.firebaseDoc(window.firebaseDb, collectionName, prod.id.toString());
-                    await window.firebaseUpdate(docRef, prod);
-                    alert("✅ УСПЕШНО СОХРАНЕНО В ОБЛАКО!"); // Visual feedback
+                    // 1. Пытаемся сохранить
+                    // Если документа нет - setDoc создаст его. Если есть - обновит.
+                    await window.firebaseSet(window.firebaseDoc(window.firebaseDb, collectionName, prod.id.toString()), prod);
+                    return true;
                 } catch(e) {
-                    alert("❌ ОШИБКА СОХРАНЕНИЯ: " + e.message); // Visual error
-                    console.error(e);
+                    throw e;
                 }
             } else {
-                alert("⚠️ РЕЖИМ ДЕМО: Сохранено только в памяти телефона. Вставь ключи Firebase!");
+                throw new Error("Нет соединения с базой (Демо режим)");
+            }
+        }
+
+        // --- NEW: EXPORT DB (BACKUP) ---
+        async function exportDatabase() {
+            if (!window.firebaseDb) {
+                alert("Нет соединения с базой!");
+                return;
+            }
+            
+            const btn = document.querySelector('button[title="Скачать копию базы данных"]');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '⏳ ЗАГРУЗКА...';
+            btn.disabled = true;
+
+            try {
+                // 1. Fetch ALL data afresh to be sure
+                const productsSnap = await window.firebaseGetDocs(window.firebaseCollection(window.firebaseDb, "products"));
+                const gachaSnap = await window.firebaseGetDocs(window.firebaseCollection(window.firebaseDb, "gacha"));
+                
+                const backupData = {
+                    date: new Date().toISOString(),
+                    products: [],
+                    gacha: []
+                };
+
+                productsSnap.forEach(doc => backupData.products.push(doc.data()));
+                gachaSnap.forEach(doc => backupData.gacha.push(doc.data()));
+
+                // 2. Create File
+                const dataStr = JSON.stringify(backupData, null, 2);
+                const blob = new Blob([dataStr], { type: "application/json" });
+                const url = URL.createObjectURL(blob);
+                
+                // 3. Trigger Download
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `stranger_shop_backup_${new Date().toISOString().split('T')[0]}.json`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                
+                alert("Бэкап сохранен! Спрячь этот файл в надежное место.");
+
+            } catch (e) {
+                console.error(e);
+                alert("Ошибка создания бэкапа: " + e.message);
+            } finally {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
             }
         }
 
@@ -705,7 +725,7 @@
                         <button onclick="enterShop()" class="retro-btn px-8 py-4 text-xl font-bold tracking-widest w-full hover:bg-red-900/20">МАГАЗИН</button>
                         <button onclick="enterGacha()" class="retro-btn cyan px-8 py-4 text-xl font-bold tracking-widest w-full shadow-[0_0_10px_rgba(34,211,238,0.3)]">БРОСОК СУДЬБЫ</button>
                         <button onclick="alert('Тест скоро будет доступен. Лаборатория закрыта.')" class="retro-btn px-8 py-4 text-xl font-bold tracking-widest w-full hover:bg-red-900/20 opacity-70">НАЧАТЬ ЭКСПЕРИМЕНТ</button>
-                        <button onclick="window.open('https://t.me/radioIznanka', '_blank')" class="retro-btn px-8 py-4 text-xl font-bold tracking-widest w-full hover:bg-red-900/20">РАДИОЭФИР</button>
+                        <button onclick="window.open('https://t.me/ТВОЙ_КАНАЛ', '_blank')" class="retro-btn px-8 py-4 text-xl font-bold tracking-widest w-full hover:bg-red-900/20">РАДИОЭФИР</button>
                     </div>
                 </div>
             `;
@@ -769,67 +789,40 @@
         function tuneRadio(val) {
             const freq = parseFloat(val);
             document.getElementById('freq-display').innerText = freq.toFixed(1);
-            
-            // Check proximity to secrets
             let message = "...ПОИСК СИГНАЛА...";
             let signalStrength = 0;
             let currentType = 'neutral';
-            
-            // Proximity range
             const range = 1.5; 
-
             secretChannels.forEach(ch => {
                 const diff = Math.abs(ch.freq - freq);
                 if (diff < range) {
                     const clarity = 1 - (diff / range); // 0 to 1
                     signalStrength = Math.max(signalStrength, clarity);
-                    
-                    if (clarity > 0.8) {
-                        message = ch.msg;
-                        currentType = ch.type;
-                    } else if (clarity > 0.4) {
-                        message = scrambleText(ch.msg, 0.5); // 50% scrambled
-                    } else {
-                        message = scrambleText(ch.msg, 0.9); // Mostly static
-                    }
+                    if (clarity > 0.8) { message = ch.msg; currentType = ch.type; } 
+                    else if (clarity > 0.4) { message = scrambleText(ch.msg, 0.5); } 
+                    else { message = scrambleText(ch.msg, 0.9); }
                 }
             });
-
-            // Update UI
             const msgEl = document.getElementById('radio-message');
             const staticEl = document.getElementById('radio-static');
             const led = document.getElementById('signal-led');
-
             msgEl.innerText = message;
-            
-            // Signal visuals
             if (signalStrength > 0.1) {
                 msgEl.style.opacity = 0.5 + (signalStrength * 0.5);
                 msgEl.style.filter = `blur(${(1-signalStrength)*2}px)`;
-                staticEl.style.opacity = 0.3 - (signalStrength * 0.2); // Less static when signal is strong
-                
-                // Color change for evil channels
+                staticEl.style.opacity = 0.3 - (signalStrength * 0.2);
                 if (currentType === 'evil' && signalStrength > 0.8) {
                     document.body.classList.add('vecna-mode');
-                    msgEl.style.color = '#ff0000';
-                    msgEl.style.textShadow = '0 0 5px red';
+                    msgEl.style.color = '#ff0000'; msgEl.style.textShadow = '0 0 5px red';
                 } else {
                     document.body.classList.remove('vecna-mode');
-                    msgEl.style.color = '#22d3ee'; // Cyan default
-                    msgEl.style.textShadow = '0 0 5px cyan';
+                    msgEl.style.color = '#22d3ee'; msgEl.style.textShadow = '0 0 5px cyan';
                 }
             } else {
-                msgEl.style.opacity = 0.3;
-                msgEl.style.filter = 'blur(3px)';
-                staticEl.style.opacity = 0.4;
-                document.body.classList.remove('vecna-mode');
-                msgEl.style.color = '#4ade80'; // Green idle
-                msgEl.style.textShadow = 'none';
+                msgEl.style.opacity = 0.3; msgEl.style.filter = 'blur(3px)'; staticEl.style.opacity = 0.4;
+                document.body.classList.remove('vecna-mode'); msgEl.style.color = '#4ade80'; msgEl.style.textShadow = 'none';
             }
-
-            // LED
-            if (signalStrength > 0.7) led.classList.add('active');
-            else led.classList.remove('active');
+            if (signalStrength > 0.7) led.classList.add('active'); else led.classList.remove('active');
         }
 
         function scrambleText(text, factor) {
@@ -902,13 +895,8 @@
                 stockEl.className = "text-xs text-gray-500 mb-2 font-mono";
             }
 
-            // Настраиваем кнопку добавления в корзину внутри модалки
             const btn = document.getElementById('detail-add-btn');
-            btn.onclick = () => {
-                addToCart(product.id);
-                closeProductModal();
-            };
-
+            btn.onclick = () => { addToCart(product.id); closeProductModal(); };
             document.getElementById('product-modal').classList.remove('hidden');
         }
 
@@ -933,20 +921,36 @@
                 // Optimistic Update
                 targetArray[pIndex] = { ...targetArray[pIndex], name, price, stock, image, desc };
                 
-                // Save to Cloud
-                const btn = document.querySelector('#admin-modal button.cyan');
+                // Visual Loading State
+                const btn = document.getElementById('save-btn');
                 const prevText = btn.innerText;
-                btn.innerText = "СОХРАНЕНИЕ...";
+                btn.innerText = "⏳ ОТПРАВКА В ОБЛАКО...";
+                btn.disabled = true;
                 
-                await saveProductToDb(targetArray[pIndex], collectionName);
-                
-                btn.innerText = prevText;
-                
-                toggleAdminModal();
-                
-                // Refresh appropriate view
-                if (collectionName === 'products') renderProducts();
-                else renderGacha();
+                try {
+                    await saveProductToDb(targetArray[pIndex], collectionName);
+                    
+                    // Success
+                    btn.innerText = "✅ СОХРАНЕНО";
+                    btn.classList.add('bg-green-600', 'border-green-500');
+                    
+                    setTimeout(() => {
+                        toggleAdminModal();
+                        btn.innerText = prevText;
+                        btn.classList.remove('bg-green-600', 'border-green-500');
+                        btn.disabled = false;
+                        
+                        // Refresh appropriate view
+                        if (collectionName === 'products') renderProducts();
+                        else renderGacha();
+                    }, 1000);
+
+                } catch (e) {
+                    // Error
+                    alert("❌ ОШИБКА: " + e.message);
+                    btn.innerText = "ПОВТОРИТЬ";
+                    btn.disabled = false;
+                }
             }
         }
 
@@ -1003,6 +1007,15 @@
                 numberDisplay.innerText = rollResult;
                 
                 // PICK RANDOM ITEM
+                // Check if gachaPool is empty (if DB failed and local is empty)
+                if (gachaPool.length === 0) {
+                     // Fallback to minimal hardcoded list to prevent crash
+                     gachaPool = [
+                        { id: 201, name: "Аудиокассета", image: "https://placehold.co/400x400/1a1a1a/e71d36?text=Mixtape", desc: "Хиты 80-х." },
+                        { id: 202, name: "Мини D20", image: "https://placehold.co/400x400/1a1a1a/e71d36?text=D20", desc: "Критический успех." }
+                     ];
+                }
+
                 const randomIndex = Math.floor(Math.random() * gachaPool.length);
                 const wonItem = gachaPool[randomIndex];
                 
@@ -1032,8 +1045,11 @@
         function renderGacha() {
             const grid = document.getElementById('gacha-grid');
             const btn = document.getElementById('gacha-admin-btn');
+            const refreshBtn = document.getElementById('gacha-refresh-btn');
+            
             if(btn) btn.innerText = isAdminMode ? 'РЕЖИМ БОГА: ВКЛ' : 'УПРАВЛЕНИЕ';
             if(btn) btn.className = `text-[10px] font-mono tracking-widest border border-gray-800 px-2 py-1 hover:border-cyan-500 hover:text-cyan-500 transition-colors ${isAdminMode ? 'text-cyan-500 border-cyan-500' : 'text-gray-600'}`;
+            if(refreshBtn) refreshBtn.classList.toggle('hidden', !isAdminMode);
 
             grid.innerHTML = gachaPool.map((item, idx) => {
                  const editBtn = isAdminMode ? `
@@ -1071,7 +1087,10 @@
                         </div>
                         
                         <!-- ADMIN TOGGLE -->
-                        <div class="flex justify-end">
+                        <div class="flex justify-end gap-2">
+                            <button onclick="loadProductsFromDb(true)" class="hidden text-[10px] font-mono tracking-widest border border-cyan-500 px-2 py-1 text-cyan-500 transition-colors" id="shop-refresh-btn">
+                                🔄 СИНХРОНИЗАЦИЯ
+                            </button>
                             <button onclick="toggleAdminMode()" class="text-[10px] font-mono tracking-widest border border-gray-800 px-2 py-1 hover:border-cyan-500 hover:text-cyan-500 transition-colors ${isAdminMode ? 'text-cyan-500 border-cyan-500' : 'text-gray-600'}">
                                 ${isAdminMode ? 'РЕЖИМ БОГА: ВКЛ' : 'УПРАВЛЕНИЕ'}
                             </button>
@@ -1090,6 +1109,11 @@
                 html += `<div class="text-center py-10 text-gray-500 font-mono fade-in">ПУСТОТА...</div>`;
             }
             container.innerHTML = html;
+            
+            // Show refresh button if admin
+            const refreshBtn = document.getElementById('shop-refresh-btn');
+            if(refreshBtn) refreshBtn.classList.toggle('hidden', !isAdminMode);
+            
             lucide.createIcons();
         }
 
