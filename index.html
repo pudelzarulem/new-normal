@@ -304,7 +304,7 @@
                     </div>
                 </div>
 
-                <button id="roll-btn" onclick="rollD20()" class="retro-btn blue px-8 py-4 text-xl font-bold tracking-widest mb-8">
+                <button id="roll-btn" onclick="payForGacha()" class="retro-btn blue px-8 py-4 text-xl font-bold tracking-widest mb-8 hover:shadow-[0_0_20px_blue]">
                     БРОСОК (200 ₽)
                 </button>
                 
@@ -523,7 +523,7 @@
                         </div>
                     </div>
                 </div>
-                <button id="pay-button" onclick="processPayment()" class="w-full mt-6 retro-btn cyan py-3 font-bold text-lg hover:shadow-[0_0_20px_cyan]">
+                <button id="pay-button" onclick="processDeliveryPayment()" class="w-full mt-6 retro-btn cyan py-3 font-bold text-lg hover:shadow-[0_0_20px_cyan]">
                     ОПЛАТИТЬ ЗАКАЗ
                 </button>
                 <div class="text-center mt-2 text-[10px] text-gray-600 font-mono">
@@ -558,7 +558,7 @@
                     </div>
                     <!-- ДВЕ КНОПКИ ДЕЙСТВИЯ -->
                     <div class="grid grid-cols-2 gap-3">
-                        <button onclick="checkoutInstant()" class="retro-btn py-4 font-bold text-xs md:text-sm">ЗАБРАТЬ СЕЙЧАС</button>
+                        <button onclick="payForPickup()" class="retro-btn py-4 font-bold text-xs md:text-sm hover:shadow-[0_0_15px_red]">ЗАБРАТЬ (ОПЛАТА)</button>
                         <button onclick="openDelivery()" class="retro-btn cyan py-4 font-bold text-xs md:text-sm">ОФОРМИТЬ ДОМОЙ</button>
                     </div>
                 </div>
@@ -1316,6 +1316,7 @@
         }
 
         function rollD20() {
+            // ORIGINAL GACHA ANIMATION - NO LONGER USED DIRECTLY
             if (isRolling) return;
             isRolling = true;
             const dieElement = document.getElementById('d20-die');
@@ -1335,37 +1336,7 @@
                 dieElement.classList.remove('rolling');
                 const rollResult = Math.floor(Math.random() * 20) + 1;
                 numberDisplay.innerText = rollResult;
-                
-                if (gachaPool.length === 0) {
-                     gachaPool = [
-                        { id: 201, name: "Аудиокассета", image: "https://placehold.co/400x400/1a1a1a/e71d36?text=Mixtape", desc: "Хиты 80-х." },
-                        { id: 202, name: "Мини D20", image: "https://placehold.co/400x400/1a1a1a/e71d36?text=D20", desc: "Критический успех." }
-                     ];
-                }
-
-                const randomIndex = Math.floor(Math.random() * gachaPool.length);
-                const wonItem = gachaPool[randomIndex];
-                
-                resultArea.innerHTML = `
-                    <div class="fade-in mt-6 w-full max-w-sm mx-auto">
-                        <div class="text-green-500 font-bold mb-2 text-xl font-mono">СУДЬБА ВЫБРАЛА:</div>
-                        <div class="retro-card border-red-500 shadow-[0_0_20px_red]">
-                            <div class="h-48 bg-gray-900 border-b border-red-900/50">
-                                <img src="${wonItem.image}" class="w-full h-full object-cover">
-                            </div>
-                            <div class="p-4">
-                                <h3 class="text-xl font-bold text-white mb-1">${wonItem.name}</h3>
-                                <p class="text-gray-400 text-xs mb-3">${wonItem.desc}</p>
-                                <div class="w-full bg-cyan-900/20 border border-cyan-500/50 p-2 text-center text-cyan-400 font-bold text-sm tracking-widest">
-                                    ПОЛУЧЕНО
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                `;
-                isRolling = false;
-                btn.disabled = false;
-                btn.innerText = `БРОСОК (200 ₽)`;
+                // Logic continues...
             }, 2500);
         }
         
@@ -1507,24 +1478,8 @@
         }
 
         function checkoutInstant() {
-            if(cart.length === 0) return alert("Корзина пуста!");
-            const total = cart.reduce((sum, item) => sum + item.price, 0);
-            const finalTotal = discountApplied ? Math.floor(total * 0.87) : total;
-            
-            const orderData = {
-                type: "PICKUP",
-                items: cart,
-                total: finalTotal,
-                date: new Date().toISOString()
-            };
-            
-            console.log("Instant Checkout:", orderData);
-            alert(`🤝 ОПЛАТА НА МЕСТЕ!\nСумма: ${finalTotal} ₽\nПокажите этот экран водителю, чтобы получить товар.`);
-            
-            cart = [];
-            discountApplied = false;
-            updateCartUI();
-            toggleCart();
+            // Deprecated, use payForPickup
+            alert("Используйте кнопку ОПЛАТИТЬ");
         }
 
         function openDelivery() {
@@ -1559,21 +1514,9 @@
             }, 50);
         }
 
-        function processPayment() {
-            const name = document.getElementById('del-name').value;
-            const phone = document.getElementById('del-phone').value;
-            const address = document.getElementById('del-address').value;
-            const time = document.getElementById('del-time').value;
-            
-            if(!name || !phone || !address || !time) return alert("Заполните все поля!");
-            
-            // 1. Считаем сумму
-            let total = cart.reduce((sum, item) => sum + item.price, 0);
-            if(discountApplied) total = Math.floor(total * 0.87);
-            const grandTotal = total + 300; // Доставка
-
-            // 2. Данные для Робокассы
-            // Берем настройки из keys.js (если их нет - ругаемся)
+        // 🔥🔥🔥 MAIN PAYMENT LOGIC (UNIVERSAL) 🔥🔥🔥
+        function redirectToPayment(amount, description) {
+             // 1. Проверяем настройки
             if (!window.STRANGER_KEYS || !window.STRANGER_KEYS.ROBOKASSA_LOGIN) {
                 alert("ОШИБКА: Не настроена касса в keys.js!");
                 return;
@@ -1583,35 +1526,59 @@
             const mrh_pass1 = window.STRANGER_KEYS.ROBOKASSA_PASS1;
             const isTest = window.STRANGER_KEYS.ROBOKASSA_TEST_MODE; // 1 или 0
             
-            // Номер заказа = случайное число + время (чтобы не повторялся)
-            const inv_id = Math.floor(Date.now() / 1000); 
-            
-            // Описание заказа
-            const inv_desc = `Заказ Stranger Shop: ${phone}`;
-            
-            // 3. Генерируем подпись (MD5)
-            // Формула: login:OutSum:InvId:password1
-            const signatureString = `${mrh_login}:${grandTotal}:${inv_id}:${mrh_pass1}`;
+            // 2. Генерация параметров
+            const inv_id = Math.floor(Date.now() / 1000); // Unique ID
+            // Важно: OutSum для подписи должен точно совпадать с OutSum в ссылке
+            // Используем целое число или .00 если нужно, но лучше просто число
+            const out_sum = amount.toString(); 
+
+            // 3. Подпись (MD5) -> Login:OutSum:InvId:Pass1
+            const signatureString = `${mrh_login}:${out_sum}:${inv_id}:${mrh_pass1}`;
             const signatureValue = md5(signatureString);
 
-            // 4. Формируем ссылку
-            let paymentUrl = `https://auth.robokassa.ru/Merchant/Index.aspx?MerchantLogin=${mrh_login}&OutSum=${grandTotal}&InvId=${inv_id}&Description=${encodeURIComponent(inv_desc)}&SignatureValue=${signatureValue}`;
+            // 4. Ссылка
+            let paymentUrl = `https://auth.robokassa.ru/Merchant/Index.aspx?MerchantLogin=${mrh_login}&OutSum=${out_sum}&InvId=${inv_id}&Description=${encodeURIComponent(description)}&SignatureValue=${signatureValue}`;
             
-            // Если тестовый режим - добавляем параметр
             if (isTest) {
                 paymentUrl += "&IsTest=1";
             }
-
-            console.log("Redirecting to:", paymentUrl);
             
-            // 5. Сохраняем корзину (опционально, сейчас просто очистим) и перенаправляем
-            if(confirm(`Сумма к оплате: ${grandTotal} ₽.\nПерейти на страницу оплаты?`)) {
-                // Тут можно сохранить заказ в Firebase перед уходом, но пока просто редирект
-                window.location.href = paymentUrl;
-                
-                // Очистка (сработает если юзер вернется назад, но лучше так)
-                cart = [];
-                updateCartUI();
+            console.log("Pay URL:", paymentUrl);
+            console.log("Sig Source:", signatureString);
+
+            // 5. Редирект
+            window.location.href = paymentUrl;
+        }
+
+        function payForGacha() {
+            if(confirm("Испытать судьбу за 200 рублей?")) {
+                redirectToPayment(200, "Stranger Gacha Roll");
+            }
+        }
+
+        function payForPickup() {
+            if(cart.length === 0) return alert("Корзина пуста!");
+            let total = cart.reduce((sum, item) => sum + item.price, 0);
+            if(discountApplied) total = Math.floor(total * 0.87);
+            
+            if(confirm(`Оплатить заказ (самовывоз): ${total} ₽?`)) {
+                redirectToPayment(total, "Stranger Pickup Order");
+            }
+        }
+
+        function processDeliveryPayment() {
+            const name = document.getElementById('del-name').value;
+            const phone = document.getElementById('del-phone').value;
+            const address = document.getElementById('del-address').value;
+            
+            if(!name || !phone || !address) return alert("Заполните Имя, Телефон и Адрес!");
+            
+            let total = cart.reduce((sum, item) => sum + item.price, 0);
+            if(discountApplied) total = Math.floor(total * 0.87);
+            const grandTotal = total + 300; // Доставка
+
+            if(confirm(`Оплатить доставку: ${grandTotal} ₽?`)) {
+                redirectToPayment(grandTotal, `Delivery: ${phone}`);
             }
         }
 
@@ -1619,8 +1586,6 @@
 
         // 🔥 MODIFIED WINDOW ONLOAD - No Auto Quiz, Direct to Menu
         window.onload = () => { 
-            // initMusic(); // Music function not defined in this scope, removing to prevent errors
-            
             // Check if quiz already done
             if (localStorage.getItem('iznanka_visited')) {
                 finishQuiz();
