@@ -154,13 +154,6 @@
 </head>
 <body class="antialiased h-screen flex flex-col">
 
-    <!-- 🎵 MUSIC PLAYER -->
-    <!-- Stranger Things Theme -->
-    <audio id="bg-music" loop>
-        <source src="https://www.myinstants.com/media/sounds/stranger-things-theme-song.mp3" type="audio/mpeg">
-        Your browser does not support the audio element.
-    </audio>
-
     <!-- FX -->
     <canvas id="upside-down-canvas"></canvas>
     <div class="film-grain"></div>
@@ -178,16 +171,10 @@
                 </button>
                 <div class="iznanka-logo blue-theme text-xl md:text-3xl cursor-pointer transition-all" onclick="resetApp()">The Upside Down</div>
             </div>
-            <div class="flex items-center gap-4">
-                 <!-- 🎵 MUSIC TOGGLE -->
-                <button onclick="toggleMusic()" class="text-gray-500 hover:text-cyan-400 transition-colors" title="Вкл/Выкл музыку">
-                    <i id="music-icon-shop" data-lucide="volume-x" class="w-6 h-6"></i>
-                </button>
-                <button onclick="toggleCart()" class="relative group">
-                    <i data-lucide="shopping-cart" class="text-cyan-400 w-6 h-6 drop-shadow-[0_0_8px_rgba(34,211,238,0.8)] group-hover:drop-shadow-[0_0_15px_white] transition-all"></i>
-                    <span id="cart-count" class="absolute -top-2 -right-2 bg-red-600 text-black text-[10px] font-bold px-1.5 py-0.5 rounded-full hidden shadow-[0_0_10px_red]">0</span>
-                </button>
-            </div>
+            <button onclick="toggleCart()" class="relative group">
+                <i data-lucide="shopping-cart" class="text-cyan-400 w-6 h-6 drop-shadow-[0_0_8px_rgba(34,211,238,0.8)] group-hover:drop-shadow-[0_0_15px_white] transition-all"></i>
+                <span id="cart-count" class="absolute -top-2 -right-2 bg-red-600 text-black text-[10px] font-bold px-1.5 py-0.5 rounded-full hidden shadow-[0_0_10px_red]">0</span>
+            </button>
         </header>
 
         <!-- HEADER (GACHA) -->
@@ -197,12 +184,6 @@
                     <i data-lucide="arrow-left" class="w-6 h-6 drop-shadow-[0_0_5px_cyan] group-hover:drop-shadow-[0_0_10px_white]"></i>
                 </button>
                 <div class="iznanka-logo blue-theme text-xl md:text-3xl cursor-pointer">БРОСОК СУДЬБЫ</div>
-            </div>
-            <div class="flex items-center gap-4">
-                 <!-- 🎵 MUSIC TOGGLE -->
-                <button onclick="toggleMusic()" class="text-gray-500 hover:text-cyan-400 transition-colors" title="Вкл/Выкл музыку">
-                    <i id="music-icon-gacha" data-lucide="volume-x" class="w-6 h-6"></i>
-                </button>
             </div>
         </header>
 
@@ -690,8 +671,6 @@
         let currentWelcomeQuestions = [];
         let currentExperimentQuestions = [];
         let experimentCurrentQ = 0;
-        let isMusicPlaying = false; // State for music
-        let music; // Audio element reference
 
         // 2. DATA DEFINITIONS
         
@@ -931,56 +910,6 @@
             }
         }
 
-        // --- MUSIC CONTROL ---
-        function initMusic() {
-             music = document.getElementById('bg-music');
-             music.volume = 0.4;
-             // Try auto play, browsers block it usually but try anyway
-             // music.play().catch(() => {});
-        }
-
-        function toggleMusic() {
-            if (!music) initMusic();
-            
-            if (isMusicPlaying) {
-                music.pause();
-                isMusicPlaying = false;
-            } else {
-                music.play().then(() => {
-                    isMusicPlaying = true;
-                }).catch(e => console.log("Audio play failed", e));
-            }
-            updateMusicIcons();
-        }
-
-        // Play music helper for interactions
-        function tryPlayMusic() {
-            if (!music) initMusic();
-            if (!isMusicPlaying) {
-                music.play().then(() => {
-                    isMusicPlaying = true;
-                    updateMusicIcons();
-                }).catch(() => {
-                    // Still blocked
-                });
-            }
-        }
-
-        function updateMusicIcons() {
-            const iconName = isMusicPlaying ? 'volume-2' : 'volume-x';
-            // We need to update icons in both headers if they exist
-            const shopIcon = document.getElementById('music-icon-shop');
-            const gachaIcon = document.getElementById('music-icon-gacha');
-            
-            if(shopIcon) {
-                shopIcon.setAttribute('data-lucide', iconName);
-            }
-            if(gachaIcon) {
-                gachaIcon.setAttribute('data-lucide', iconName);
-            }
-            lucide.createIcons();
-        }
-
         // --- UI FUNCTIONS ---
 
         function renderQuiz() {
@@ -1016,7 +945,6 @@
                 btn.className = 'retro-btn p-4 text-left w-full hover:pl-6 transition-all duration-300 font-bold text-sm md:text-base';
                 btn.innerText = `> ${answer}`;
                 btn.onclick = () => { 
-                    tryPlayMusic(); // Try starting music on interaction
                     currentQuestion++; 
                     showWelcomeQuestion(); 
                 };
@@ -1045,7 +973,6 @@
         }
 
         function enterShop() {
-            tryPlayMusic();
             hideAllViews();
             document.getElementById('shop-header').classList.remove('hidden');
             document.getElementById('catalog-view').classList.remove('hidden');
@@ -1054,7 +981,6 @@
         }
         
         function enterGacha() {
-            tryPlayMusic();
             hideAllViews();
             document.getElementById('gacha-header').classList.remove('hidden');
             document.getElementById('gacha-view').classList.remove('hidden');
@@ -1063,7 +989,6 @@
         }
 
         function enterRadio() {
-            tryPlayMusic();
             hideAllViews();
             document.getElementById('radio-header').classList.remove('hidden');
             document.getElementById('radio-view').classList.remove('hidden');
@@ -1073,7 +998,6 @@
         }
 
         function openRadioLink() {
-            tryPlayMusic();
             let channelUrl = "https://t.me/";
             if (window.STRANGER_KEYS && window.STRANGER_KEYS.TELEGRAM_CHANNEL_URL) {
                 channelUrl = window.STRANGER_KEYS.TELEGRAM_CHANNEL_URL;
@@ -1092,7 +1016,6 @@
 
         // --- EXPERIMENT / DISCOUNT LOGIC ---
         function startExperiment() {
-            tryPlayMusic();
             if (localStorage.getItem('promo_generated')) {
                 const code = localStorage.getItem('promo_code');
                 document.getElementById('archived-promo').innerText = code;
