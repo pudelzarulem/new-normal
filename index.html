@@ -13,6 +13,9 @@
     <!-- Иконки Lucide -->
     <script src="https://unpkg.com/lucide@latest"></script>
     
+    <!-- 🔥 ПОДКЛЮЧАЕМ БИБЛИОТЕКУ ШИФРОВАНИЯ (MD5) ДЛЯ КАССЫ -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/blueimp-md5/2.19.0/js/md5.min.js"></script>
+    
     <!-- 🔥 ПОДКЛЮЧАЕМ ТВОЙ СЕЙФ С КЛЮЧАМИ -->
     <script src="keys.js"></script>
 
@@ -520,7 +523,12 @@
                         </div>
                     </div>
                 </div>
-                <button onclick="processPayment()" class="w-full mt-6 retro-btn cyan py-3 font-bold text-lg hover:shadow-[0_0_20px_cyan]">ПЕРЕЙТИ К ОПЛАТЕ</button>
+                <button id="pay-button" onclick="processPayment()" class="w-full mt-6 retro-btn cyan py-3 font-bold text-lg hover:shadow-[0_0_20px_cyan]">
+                    ОПЛАТИТЬ ЗАКАЗ
+                </button>
+                <div class="text-center mt-2 text-[10px] text-gray-600 font-mono">
+                    SECURED BY ROBOKASSA
+                </div>
             </div>
         </div>
 
@@ -615,7 +623,7 @@
     <!-- FIREBASE SDK -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-        import { getFirestore, collection, getDocs, doc, updateDoc, setDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+        import { getFirestore, collection, getDocs, doc, updateDoc, setDoc, deleteDoc, addDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
         // 🔥🔥 ВСТАВИТЬ КОНФИГ ТУТ 🔥🔥
         
@@ -647,6 +655,7 @@
                 window.firebaseGetDocs = getDocs;
                 window.firebaseDelete = deleteDoc;
                 window.firebaseCollection = collection;
+                window.firebaseAdd = addDoc; // 🔥 Added for Orders
                 
                 // Load products AND Gacha from DB immediately
                 window.loadProductsFromDb();
@@ -1558,37 +1567,59 @@
             
             if(!name || !phone || !address || !time) return alert("Заполните все поля!");
             
+            // 1. Считаем сумму
             let total = cart.reduce((sum, item) => sum + item.price, 0);
             if(discountApplied) total = Math.floor(total * 0.87);
-            
-            // Add delivery
-            const grandTotal = total + 300;
+            const grandTotal = total + 300; // Доставка
 
-            const orderData = {
-                type: "DELIVERY",
-                user: name,
-                phone: phone,
-                address: address,
-                time: time,
-                items: cart,
-                total: grandTotal,
-                date: new Date().toISOString()
-            };
+            // 2. Данные для Робокассы
+            // Берем настройки из keys.js (если их нет - ругаемся)
+            if (!window.STRANGER_KEYS || !window.STRANGER_KEYS.ROBOKASSA_LOGIN) {
+                alert("ОШИБКА: Не настроена касса в keys.js!");
+                return;
+            }
+
+            const mrh_login = window.STRANGER_KEYS.ROBOKASSA_LOGIN;
+            const mrh_pass1 = window.STRANGER_KEYS.ROBOKASSA_PASS1;
+            const isTest = window.STRANGER_KEYS.ROBOKASSA_TEST_MODE; // 1 или 0
             
-            console.log("Delivery Order:", orderData);
-            alert(`ЗАКАЗ ПРИНЯТ!\nСумма с доставкой: ${grandTotal} ₽\nОплата будет обработана оператором.\nЖдите звонка на ${phone}`);
+            // Номер заказа = случайное число + время (чтобы не повторялся)
+            const inv_id = Math.floor(Date.now() / 1000); 
             
-            cart = [];
-            discountApplied = false;
-            updateCartUI();
-            toggleDelivery();
+            // Описание заказа
+            const inv_desc = `Заказ Stranger Shop: ${phone}`;
+            
+            // 3. Генерируем подпись (MD5)
+            // Формула: login:OutSum:InvId:password1
+            const signatureString = `${mrh_login}:${grandTotal}:${inv_id}:${mrh_pass1}`;
+            const signatureValue = md5(signatureString);
+
+            // 4. Формируем ссылку
+            let paymentUrl = `https://auth.robokassa.ru/Merchant/Index.aspx?MerchantLogin=${mrh_login}&OutSum=${grandTotal}&InvId=${inv_id}&Description=${encodeURIComponent(inv_desc)}&SignatureValue=${signatureValue}`;
+            
+            // Если тестовый режим - добавляем параметр
+            if (isTest) {
+                paymentUrl += "&IsTest=1";
+            }
+
+            console.log("Redirecting to:", paymentUrl);
+            
+            // 5. Сохраняем корзину (опционально, сейчас просто очистим) и перенаправляем
+            if(confirm(`Сумма к оплате: ${grandTotal} ₽.\nПерейти на страницу оплаты?`)) {
+                // Тут можно сохранить заказ в Firebase перед уходом, но пока просто редирект
+                window.location.href = paymentUrl;
+                
+                // Очистка (сработает если юзер вернется назад, но лучше так)
+                cart = [];
+                updateCartUI();
+            }
         }
 
         function resetApp() { location.reload(); }
 
         // 🔥 MODIFIED WINDOW ONLOAD - No Auto Quiz, Direct to Menu
         window.onload = () => { 
-            initMusic(); // Initialize music volume but don't play yet
+            // initMusic(); // Music function not defined in this scope, removing to prevent errors
             
             // Check if quiz already done
             if (localStorage.getItem('iznanka_visited')) {
