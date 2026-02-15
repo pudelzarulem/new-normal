@@ -155,9 +155,9 @@
 <body class="antialiased h-screen flex flex-col">
 
     <!-- 🎵 MUSIC PLAYER -->
-    <!-- Используем нейтральный Synthwave трек -->
+    <!-- Stranger Things Theme -->
     <audio id="bg-music" loop>
-        <source src="https://cdn.pixabay.com/download/audio/2022/10/25/audio_24e393a652.mp3" type="audio/mpeg">
+        <source src="https://www.myinstants.com/media/sounds/stranger-things-theme-song.mp3" type="audio/mpeg">
         Your browser does not support the audio element.
     </audio>
 
@@ -180,7 +180,7 @@
             </div>
             <div class="flex items-center gap-4">
                  <!-- 🎵 MUSIC TOGGLE -->
-                <button onclick="toggleMusic()" class="text-gray-500 hover:text-cyan-400 transition-colors">
+                <button onclick="toggleMusic()" class="text-gray-500 hover:text-cyan-400 transition-colors" title="Вкл/Выкл музыку">
                     <i id="music-icon-shop" data-lucide="volume-x" class="w-6 h-6"></i>
                 </button>
                 <button onclick="toggleCart()" class="relative group">
@@ -200,7 +200,7 @@
             </div>
             <div class="flex items-center gap-4">
                  <!-- 🎵 MUSIC TOGGLE -->
-                <button onclick="toggleMusic()" class="text-gray-500 hover:text-cyan-400 transition-colors">
+                <button onclick="toggleMusic()" class="text-gray-500 hover:text-cyan-400 transition-colors" title="Вкл/Выкл музыку">
                     <i id="music-icon-gacha" data-lucide="volume-x" class="w-6 h-6"></i>
                 </button>
             </div>
@@ -215,7 +215,6 @@
                 <div class="iznanka-logo text-xl md:text-3xl cursor-pointer text-gray-300 !text-shadow-none animate-none">CEREBRO</div>
             </div>
             <div class="flex items-center gap-2">
-                <!-- Music toggle not needed here as radio has its own noise -->
                 <div class="text-[10px] font-mono text-gray-500">SIGNAL</div>
                 <div id="signal-led" class="signal-light"></div>
             </div>
