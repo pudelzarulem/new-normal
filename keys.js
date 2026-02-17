@@ -22,6 +22,5 @@ window.STRANGER_KEYS = {
     // 4. НАСТРОЙКИ РОБОКАССЫ (НОВОЕ!)
     // Вставь сюда данные из личного кабинета Робокассы -> Настройки -> Технические
     ROBOKASSA_LOGIN: "IzNanka1",     // Например: StrangerShop
-    ROBOKASSA_PASS1: "OU90DIQ0gdw4ic1|MxAH",           // Пароль #1
     ROBOKASSA_TEST_MODE: 1                      // 1 = Тестовый режим, 0 = Боевой режим (реальные деньги)
 };

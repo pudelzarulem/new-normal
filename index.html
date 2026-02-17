@@ -1515,40 +1515,42 @@
         }
 
         // 🔥🔥🔥 MAIN PAYMENT LOGIC (UNIVERSAL) 🔥🔥🔥
-        function redirectToPayment(amount, description) {
-             // 1. Проверяем настройки
-            if (!window.STRANGER_KEYS || !window.STRANGER_KEYS.ROBOKASSA_LOGIN) {
-                alert("ОШИБКА: Не настроена касса в keys.js!");
-                return;
-            }
+        async function redirectToPayment(amount, description) {
+    const btn = document.querySelector('.retro-btn.cyan') || document.getElementById('pay-button') || document.body;
+    const oldText = btn.innerText;
+    btn.innerText = "⏳ СВЯЗЬ С СЕРВЕРОМ...";
+    btn.disabled = true;
 
-            const mrh_login = window.STRANGER_KEYS.ROBOKASSA_LOGIN;
-            const mrh_pass1 = window.STRANGER_KEYS.ROBOKASSA_PASS1;
-            const isTest = window.STRANGER_KEYS.ROBOKASSA_TEST_MODE; // 1 или 0
-            
-            // 2. Генерация параметров
-            const inv_id = Math.floor(Date.now() / 1000); // Unique ID
-            // Важно: OutSum для подписи должен точно совпадать с OutSum в ссылке
-            // Используем целое число или .00 если нужно, но лучше просто число
-            const out_sum = amount.toString(); 
+    try {
+        // Стучимся к твоему боту на Aeza
+        const response = await fetch('http://62.60.235.135:8000/pay_link', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                amount: amount,
+                description: description
+            })
+        });
 
-            // 3. Подпись (MD5) -> Login:OutSum:InvId:Pass1
-            const signatureString = `${mrh_login}:${out_sum}:${inv_id}:${mrh_pass1}`;
-            const signatureValue = md5(signatureString);
+        const data = await response.json();
 
-            // 4. Ссылка
-            let paymentUrl = `https://auth.robokassa.ru/Merchant/Index.aspx?MerchantLogin=${mrh_login}&OutSum=${out_sum}&InvId=${inv_id}&Description=${encodeURIComponent(description)}&SignatureValue=${signatureValue}`;
-            
-            if (isTest) {
-                paymentUrl += "&IsTest=1";
-            }
-            
-            console.log("Pay URL:", paymentUrl);
-            console.log("Sig Source:", signatureString);
-
-            // 5. Редирект
-            window.location.href = paymentUrl;
+        if (data.url) {
+            // Если бот прислал ссылку — переходим
+            window.location.href = data.url;
+        } else {
+            alert("Ошибка сервера: " + (data.error || "Неизвестная ошибка"));
+            btn.innerText = oldText;
+            btn.disabled = false;
         }
+    } catch (e) {
+        console.error(e);
+        alert("Не удалось соединиться с ботом. Проверь интернет.");
+        btn.innerText = oldText;
+        btn.disabled = false;
+    }
+}
 
         function payForGacha() {
             if(confirm("Испытать судьбу за 200 рублей?")) {
